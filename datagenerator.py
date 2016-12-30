@@ -1,14 +1,15 @@
-import random, datetime, dateutil.relativedelta, os
+import random, datetime, dateutil.relativedelta, time
 import kudu
-# from confluent_kafka import Producer
+from kafka import KafkaProducer
 
 # Data to produce
 # - well information - id, location, depth, chemical (oil, ng, both), type (land/offshore), leakage risk level (1-5)
-# - historical well performance - daily rate (OS: $520k/day), cost ($100m/100days, L: $1-15M/100 days)
-# - historical well sensor data - tag, time, value, confidence
-# - real-time well sensor data - tag, time, value, confidence
+# - historical well performance (todo) - daily rate (OS: $520k/day), cost ($100m/100days, L: $1-15M/100 days)
+# - historical well sensor data - tag, time, value, confidence (todo)
+# - real-time well sensor data - tag, time, value, confidence (todo)
 
 class DataGenerator():
+    # Initialize generator by reading in all config values
     def __init__(self, config):
         for section in ['well info', 'hadoop']:
             if section not in config:
@@ -17,7 +18,6 @@ class DataGenerator():
         self._config = {}
 
         # Hadoop Config Data
-        self._config['hdfs_url'] = config['hadoop']['hdfs_url']
         self._config['kafka_brokers'] = config['hadoop']['kafka_brokers']
         self._config['kafka_topic'] = config['hadoop']['kafka_topic']
         self._config['kudu_master'] = config['hadoop']['kudu_masters']
@@ -38,13 +38,19 @@ class DataGenerator():
         self._config['device_entities'] = config['sensor device data']['device_entities'].split(',')
         self._config['measurement_interval'] = int(config['sensor device data']['measurement_interval'])
 
-        # self._connect_kafka()
+        self._connect_kafka()
         self._connect_kudu()
 
+    # Connect to Kafka
+    def _connect_kafka(self):
+        self._kafka_producer = KafkaProducer(bootstrap_servers=self._config['kafka_brokers'],api_version=(0,9))
+
+    # Connect to Kudu
     def _connect_kudu(self):
         self._kudu_client = kudu.connect(host=self._config['kudu_master'], port=self._config['kudu_port'])
         self._kudu_session = self._kudu_client.new_session()
 
+    # Generate well information and write to Kudu
     def generate_well_info(self):
         print 'Generating well information'
         well_info = {}
@@ -73,13 +79,14 @@ class DataGenerator():
 
         self._kudu_session.flush()
 
+    # Generate well performance information and write to Kudu
     def generate_well_performance(self):
         print 'Generating well performance data'
-        well_performance = pd.DataFrame(columns = ['well_id','date','output','cost'])
 
         # TODO - generate well performance history
         # TODO - write to Impala
 
+    # Generate well sensor device to tag description mappings
     def generate_tag_mappings(self):
         print 'Generating tag ID/description mappings'
         tag_mapping = {}
@@ -94,18 +101,19 @@ class DataGenerator():
                 tag_mapping['well'] = 'Well %d' % (well_id)
                 tag_mapping['tag_entity'] = '%s' % (device_entities[device_id])
                 self._kudu_session.apply(table.new_upsert(tag_mapping))
-            self._kudu_session.flush()
 
-    def generate_sensor_data(self, historical = False):
+        self._kudu_session.flush()
+
+    # Generate well sensor data (either historic or in real-time)
+    def generate_sensor_data(self, historic = False):
         print 'Generating sensor device historical data'
-        sensor_data = pd.DataFrame(columns = ['tag_id','ticks','value'])
 
         months_history = self._config['months_history']
         measurement_interval = self._config['measurement_interval']
         wells = self._config['wells']
-        devices_per_well = self._config['devices_per_well']
+        device_entities = self._config['device_entities']
 
-        if historical:
+        if historic:
             end_date = datetime.datetime.now()
             start_date = end_date - dateutil.relativedelta.relativedelta(months=months_history)
         else:
@@ -115,10 +123,14 @@ class DataGenerator():
         for date in [start_date + datetime.timedelta(seconds = x)
                      for x in range(0, int((end_date-start_date).total_seconds()), measurement_interval)]:
             date_str = date.strftime('%Y-%m-%d %H:%M:%S')
-            for well_id in range(1, wells):
-                for device_id in range(1, devices_per_well):
-                    tag_id = '%i%i000000' % (well_id, device_id)
+            for well_id in range(1, wells+1):
+                for device_id in range(0, len(device_entities)):
+                    tag_id = int('%d%d' % (well_id, device_id))
                     value = random.uniform(50,100)
-                    sensor_data.append(tag_id, date_str, value)
 
-                # TODO - write to Kafka
+                    message = '%s,%d,%f' % (date_str,tag_id,value)
+
+                    self._kafka_producer.send(self._config['kafka_topic'], value=message)
+
+                    if not historic:
+                        time.sleep(measurement_interval)
