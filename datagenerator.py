@@ -25,7 +25,6 @@ class DataGenerator():
 
         # Well configuration data
         self._config['wells'] = int(config['well info']['wells'])
-        self._config['devices_per_well'] = int(config['well info']['devices_per_well'])
         self._config['months_history'] = int(config['sensor device data']['months_history'])
         self._config['min_long'] = int(config['well info']['min_long'])
         self._config['max_long'] = int(config['well info']['max_long'])
@@ -37,14 +36,10 @@ class DataGenerator():
         self._config['well_chemicals'] = config['well info']['well_chemicals'].split(',')
         self._config['max_leakage_risk'] = int(config['well info']['max_leakage_risk'])
         self._config['device_entities'] = config['sensor device data']['device_entities'].split(',')
-        self._config['device_measurements'] = config['sensor device data']['device_measurements'].split(',')
         self._config['measurement_interval'] = int(config['sensor device data']['measurement_interval'])
 
         # self._connect_kafka()
         self._connect_kudu()
-
-    def _connect_kafka(self):
-        # TODO - connect to Kafka
 
     def _connect_kudu(self):
         self._kudu_client = kudu.connect(host=self._config['kudu_master'], port=self._config['kudu_port'])
@@ -57,7 +52,7 @@ class DataGenerator():
 
         wells = self._config['wells']
         min_lat = self._config['min_lat']
-        max_lat = self.config['max_lat']
+        max_lat = self._config['max_lat']
         min_long = self._config['min_long']
         max_long = self._config['max_long']
         min_well_depth = self._config['min_well_depth']
@@ -66,14 +61,17 @@ class DataGenerator():
         well_chemicals = self._config['well_chemicals']
         max_leakage_risk = self._config['max_leakage_risk']
 
-        for well_id in range(1, wells):
+        for well_id in range(1, wells+1):
+            well_info['well_id'] = well_id
             well_info['latitude'] = random.uniform(min_lat, max_lat)
             well_info['longitude'] = random.uniform(min_long, max_long)
             well_info['depth'] = random.uniform(min_well_depth, max_well_depth)
             well_info['well_type'] = well_types[random.randint(0,len(well_types)-1)]
             well_info['well_chemical'] = well_chemicals[random.randint(0,len(well_chemicals)-1)]
             well_info['leakage_risk'] = random.randint(1,max_leakage_risk)
-            table.new_insert(well_info)
+            self._kudu_session.apply(table.new_upsert(well_info))
+
+        self._kudu_session.flush()
 
     def generate_well_performance(self):
         print 'Generating well performance data'
@@ -88,20 +86,15 @@ class DataGenerator():
         table = self._kudu_client.table('tag_mappings')
 
         wells = self._config['wells']
-        devices_per_well = self.config['devices_per_well']
         device_entities = self._config['device_entities']
-        device_measurements = self._config['device_measurements']
 
-        for well_id in range(1, wells):
-            for device_id in range(1, devices_per_well):
-                tag_mapping['tag_id'] = '%i%i000000' % (well_id, device_id)
-                tag_mapping['tag_entity'] = 'Well %i' % (well_id)
-                tag_mapping['tag_description'] = 'Well %i %s %i %s' % \
-                                                 (well_id,
-                                                  device_entities[random.randint(0, len(device_entities) - 1)],
-                                                  device_id,
-                                                  device_measurements[random.randint(0, len(device_measurements) - 1)])
-                table.new_insert(tag_mapping)
+        for well_id in range(1, wells+1):
+            for device_id in range(0, len(device_entities)):
+                tag_mapping['tag_id'] = int('%d%d' % (well_id, device_id))
+                tag_mapping['well'] = 'Well %d' % (well_id)
+                tag_mapping['tag_entity'] = '%s' % (device_entities[device_id])
+                self._kudu_session.apply(table.new_upsert(tag_mapping))
+            self._kudu_session.flush()
 
     def generate_sensor_data(self, historical = False):
         print 'Generating sensor device historical data'
