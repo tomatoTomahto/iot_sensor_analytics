@@ -2,12 +2,11 @@ import random, datetime, dateutil.relativedelta, time
 import kudu
 from kafka import KafkaProducer
 
-# Data to produce
+# DataGenerator will produce the following data
 # - well information - id, location, depth, chemical (oil, ng, both), type (land/offshore), leakage risk level (1-5)
 # - historical well performance (todo) - daily rate (OS: $520k/day), cost ($100m/100days, L: $1-15M/100 days)
 # - historical well sensor data - tag, time, value, confidence (todo)
 # - real-time well sensor data - tag, time, value, confidence (todo)
-
 class DataGenerator():
     # Initialize generator by reading in all config values
     def __init__(self, config):
@@ -132,5 +131,5 @@ class DataGenerator():
 
                     self._kafka_producer.send(self._config['kafka_topic'], value=message)
 
-                    if not historic:
-                        time.sleep(measurement_interval)
+            if not historic:
+                time.sleep(measurement_interval)

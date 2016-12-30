@@ -6,7 +6,7 @@ def print_usage():
     print('Usage: python historian.py <config file> <option>')
     print('<option> : static     : Generate well information data')
     print('         : historic   : Generate historic sensor data')
-    print('         : realtime  : Generate real-time sensor data')
+    print('         : realtime   : Generate real-time sensor data')
     print('         : all        : Generate well info, historic & real-time sensor data')
     print('Example  : python historian.py config.ini all')
 
