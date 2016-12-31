@@ -1,12 +1,12 @@
 # cdh_historian
 ## Pre-Requisites
 1. CDH 5.10, including the following services:
-* Impala
-* Kafka
-* KUDU
-* Spark 2.0
-* Solr
-* HUE
+ * Impala
+ * Kafka
+ * KUDU
+ * Spark 2.0
+ * Solr
+ * HUE
 2. StreamSets Data Collector 2.2.1.0
 3. Anaconda Parcel for Cloudera
 4. Anaconda Distribution of Python 2.7, including the following modules:
