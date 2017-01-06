@@ -1,4 +1,4 @@
-import random, datetime, dateutil.relativedelta, time
+import random, datetime, dateutil.relativedelta, time, json
 import kudu
 from kafka import KafkaProducer
 
@@ -18,7 +18,8 @@ class DataGenerator():
 
         # Hadoop Config Data
         self._config['kafka_brokers'] = config['hadoop']['kafka_brokers']
-        self._config['kafka_topic'] = config['hadoop']['kafka_topic']
+        self._config['kafka_topic_src'] = config['hadoop']['kafka_topic_src']
+        self._config['kafka_topic_tgt'] = config['hadoop']['kafka_topic_tgt']
         self._config['kudu_master'] = config['hadoop']['kudu_masters']
         self._config['kudu_port'] = config['hadoop']['kudu_port']
 
@@ -89,7 +90,7 @@ class DataGenerator():
     def generate_tag_mappings(self):
         print 'Generating tag ID/description mappings'
         tag_mapping = {}
-        table = self._kudu_client.table('tag_mappings')
+        table = self._kudu_client.table('well_tags')
 
         wells = self._config['wells']
         device_entities = self._config['device_entities']
@@ -97,7 +98,7 @@ class DataGenerator():
         for well_id in range(1, wells+1):
             for device_id in range(0, len(device_entities)):
                 tag_mapping['tag_id'] = int('%d%d' % (well_id, device_id))
-                tag_mapping['well'] = 'Well %d' % (well_id)
+                tag_mapping['well_id'] = well_id
                 tag_mapping['tag_entity'] = '%s' % (device_entities[device_id])
                 self._kudu_session.apply(table.new_upsert(tag_mapping))
 
@@ -124,12 +125,15 @@ class DataGenerator():
             date_str = date.strftime('%Y-%m-%d %H:%M:%S')
             for well_id in range(1, wells+1):
                 for device_id in range(0, len(device_entities)):
-                    tag_id = int('%d%d' % (well_id, device_id))
-                    value = random.uniform(50,100)
+                    payload = {}
+                    payload['record_time'] = date_str
+                    payload['tag_id'] = int('%d%d' % (well_id, device_id))
+                    payload['value'] = random.uniform(50,100)
+                    #payload['message'] = '%s,%d,%f' % (date_str,tag_id,value)
 
-                    message = '%s,%d,%f' % (date_str,tag_id,value)
-
-                    self._kafka_producer.send(self._config['kafka_topic'], value=message)
-
-            if not historic:
+                    self._kafka_producer.send(self._config['kafka_topic_src'], value=json.dumps(payload))
+                    self._kafka_producer.send(self._config['kafka_topic_tgt'], value=json.dumps(payload))
+                    #print(json.dumps(payload))
+            
+            if not historic:     
                 time.sleep(measurement_interval)

@@ -5,6 +5,18 @@ from pyspark.sql.functions import *
 from pyspark.sql.types import *
 from pyspark.streaming.kafka import KafkaUtils
 from configparser import ConfigParser
+import json
+from kafka import KafkaProducer
+
+# Parse out config fields
+config = ConfigParser()
+config.read('config.ini')
+kafka_brokers = config['hadoop']['kafka_brokers']
+kafka_topic_src = config['hadoop']['kafka_topic_src']
+kafka_topic_tgt = config['hadoop']['kafka_topic_tgt']
+kudu_master = config['hadoop']['kudu_masters']
+kudu_port = config['hadoop']['kudu_port']
+interval = int(config['sensor device data']['measurement_interval'])
 
 # SparkSession singleton generator needed to operate on Dataframes
 def getSparkSessionInstance(sparkConf):
@@ -15,14 +27,12 @@ def getSparkSessionInstance(sparkConf):
             .getOrCreate()
     return globals()['sparkSessionSingletonInstance']
 
-# Parse out config fields
-config = ConfigParser()
-config.read('config.ini')
-kafka_brokers = config['hadoop']['kafka_brokers']
-kafka_topic = config['hadoop']['kafka_topic']
-kudu_master = config['hadoop']['kudu_masters']
-kudu_port = config['hadoop']['kudu_port']
-interval = int(config['sensor device data']['measurement_interval'])
+# Send messages to Kafka
+def sendKafka(messages):
+    producer = KafkaProducer(bootstrap_servers=kafka_brokers,api_version=(0,9))
+    for message in messages:
+        yield producer.send(kafka_topic_tgt, value=str(message))
+    producer.flush()
 
 # Initialize SparkSession variable and Spark/Streaming/SQL Contexts
 spark = SparkSession\
@@ -40,7 +50,7 @@ sc.setLogLevel('FATAL')
 # Read in Tag ID/Entity/Well mappings from Kudu to join with sensor data
 tag_mappings = sqc.read.format('org.apache.kudu.spark.kudu')\
     .option('kudu.master',kudu_master)\
-    .option('kudu.table','tag_mappings')\
+    .option('kudu.table','well_tags')\
     .load()
 
 # Persist in memory for fast lookup
@@ -49,8 +59,8 @@ tag_mappings.collect()
 tag_mappings.show()
 
 # Read in sensor data from Kafka at 10 second intervals with a 20 second rolling window
-kafkaStream = KafkaUtils.createDirectStream(ssc, [kafka_topic], {"metadata.broker.list": kafka_brokers})
-sensorDS = kafkaStream.map(lambda x: x[1].split(","))\
+kafkaStream = KafkaUtils.createDirectStream(ssc, [kafka_topic_src], {"metadata.broker.list": kafka_brokers})
+sensorDS = kafkaStream.map(lambda x: x[1])\
     .window(3*interval,interval)
 
 def process(time, rdd):
@@ -58,9 +68,11 @@ def process(time, rdd):
     try:
         spark = getSparkSessionInstance(rdd.context.getConf())
 
+        # Instantiate Kafka producer
+        producer = KafkaProducer(bootstrap_servers=kafka_brokers,api_version=(0,9))
+
         # Read in the raw data and convert timestamp to a string integer
-        rawSensor = spark.createDataFrame(rdd)\
-            .toDF('record_time', 'tag_id', 'value')\
+        rawSensor = spark.read.json(rdd)\
             .withColumn('record_time', regexp_replace('record_time', '[-: ]+', ''))
         #rawSensor.show()
 
@@ -75,24 +87,28 @@ def process(time, rdd):
         #taggedSensor.show()
 
         # Rejoin the data with tag entity and well mappings
-        fullSensor = taggedSensor.join(tag_mappings, ['tag_id','well','tag_entity'], 'right_outer')
+        fullSensor = taggedSensor.join(tag_mappings, ['tag_id','well_id','tag_entity'], 'right_outer')
         #fullSensor.show()
 
         # Pivot the data to show 1 column for each tag entity
-        finalSensor = fullSensor.groupBy('record_time','well')\
+        finalSensor = fullSensor.groupBy('record_time','well_id')\
             .pivot('tag_entity')\
             .agg(sum('value'))\
             .filter('record_time is not null')
-        finalSensor.show()
+        #finalSensor.show()
 
-        # Write to KUDU table
-        finalSensor.write.format('org.apache.kudu.spark.kudu')\
-            .option("kudu.master", kudu_master)\
-            .option("kudu.table", "sensor_measurements")\
-            .mode("append")\
-            .save()
+        # Write back to Kafka
+        finalSensor.toJSON().foreachPartition(sendKafka)
+        
+# Write to KUDU table
+#        finalSensor.write.format('org.apache.kudu.spark.kudu')\
+#            .option("kudu.master", kudu_master)\
+#            .option("kudu.table", "well_measurements")\
+#            .mode("append")\
+#            .save()
     except Exception as e:
         print(e)
+        #pass
 
 sensorDS.foreachRDD(process)
 
