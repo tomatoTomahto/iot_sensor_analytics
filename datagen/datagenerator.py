@@ -132,7 +132,7 @@ class DataGenerator():
                     #payload['message'] = '%s,%d,%f' % (date_str,tag_id,value)
 
                     self._kafka_producer.send(self._config['kafka_topic_src'], value=json.dumps(payload))
-                    self._kafka_producer.send(self._config['kafka_topic_tgt'], value=json.dumps(payload))
+#                    self._kafka_producer.send(self._config['kafka_topic_tgt'], value=json.dumps(payload))
                     #print(json.dumps(payload))
             
             if not historic:     

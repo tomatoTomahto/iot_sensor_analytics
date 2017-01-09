@@ -47,11 +47,18 @@ sqc = SQLContext(sc, spark)
 # Turn off INFO/WARN logs
 sc.setLogLevel('FATAL')
 
+# Read in Well information from Kudu to join with sensor data
+well_info = sqc.read.format('org.apache.kudu.spark.kudu')\
+    .option('kudu.master',kudu_master)\
+    .option('kudu.table','well_info')\
+    .load()
+
 # Read in Tag ID/Entity/Well mappings from Kudu to join with sensor data
 tag_mappings = sqc.read.format('org.apache.kudu.spark.kudu')\
     .option('kudu.master',kudu_master)\
     .option('kudu.table','well_tags')\
-    .load()
+    .load()\
+    .join(well_info, 'well_id')
 
 # Persist in memory for fast lookup
 tag_mappings.persist()
@@ -72,22 +79,30 @@ def process(time, rdd):
         producer = KafkaProducer(bootstrap_servers=kafka_brokers,api_version=(0,9))
 
         # Read in the raw data and convert timestamp to a string integer
-        rawSensor = spark.read.json(rdd)\
-            .withColumn('record_time', regexp_replace('record_time', '[-: ]+', ''))
+        rawSensor = spark.read.json(rdd)
         #rawSensor.show()
 
-        # Cast all columns to the right data types (record_time:bigint, tag_id:int, value:float)
-        castSensor = rawSensor.select(rawSensor.record_time.cast('bigint'), 
-                                      rawSensor.tag_id.cast('integer'), 
-                                      rawSensor.value.cast('float'))
-        #castSensor.show()
-
         # Join the sensor data with tag ID mappings
-        taggedSensor = castSensor.join(tag_mappings, 'tag_id', 'inner')
+        taggedSensor = rawSensor.join(tag_mappings, 'tag_id', 'inner')\
+            .withColumn('id',concat(rawSensor.record_time, tag_mappings.well_id.cast('string'), tag_mappings.tag_entity.cast('string')))\
+            .withColumn('record_time_solr', regexp_replace('record_time', ' ', 'T'))\
+            .withColumn('record_time_solr',concat('record_time_solr',lit('Z')))
+
+        # Send this data to Kafka to be loaded into Search
+        taggedSensor.toJSON().foreachPartition(sendKafka)
         #taggedSensor.show()
 
+        # Cast all columns to the right data types (record_time:bigint, tag_id:int, value:float)
+        timeSensor = taggedSensor.withColumn('record_time', regexp_replace('record_time', '[-: ]+', ''))
+        castSensor = timeSensor.select(timeSensor.record_time.cast('bigint'), 
+                                       timeSensor.tag_id.cast('integer'), 
+                                       timeSensor.value.cast('float'),
+                                       timeSensor.well_id,
+                                       timeSensor.tag_entity)
+       # castSensor.show()
+
         # Rejoin the data with tag entity and well mappings
-        fullSensor = taggedSensor.join(tag_mappings, ['tag_id','well_id','tag_entity'], 'right_outer')
+        fullSensor = castSensor.join(tag_mappings, ['tag_id','well_id','tag_entity'], 'right_outer')
         #fullSensor.show()
 
         # Pivot the data to show 1 column for each tag entity
@@ -100,12 +115,6 @@ def process(time, rdd):
         # Write back to Kafka
         finalSensor.toJSON().foreachPartition(sendKafka)
         
-# Write to KUDU table
-#        finalSensor.write.format('org.apache.kudu.spark.kudu')\
-#            .option("kudu.master", kudu_master)\
-#            .option("kudu.table", "well_measurements")\
-#            .mode("append")\
-#            .save()
     except Exception as e:
         print(e)
         #pass
