@@ -25,7 +25,7 @@ class DataGenerator():
 
         # Well configuration data
         self._config['wells'] = int(config['well info']['wells'])
-        self._config['months_history'] = int(config['sensor device data']['months_history'])
+        self._config['days_history'] = int(config['sensor device data']['days_history'])
         self._config['min_long'] = int(config['well info']['min_long'])
         self._config['max_long'] = int(config['well info']['max_long'])
         self._config['min_lat'] = int(config['well info']['min_lat'])
@@ -68,7 +68,7 @@ class DataGenerator():
 
         # Define a schema for a raw_measurements table
         rm_builder = kudu.schema_builder()
-        rm_builder.add_column('record_time').type(kudu.int64).nullable(False)
+        rm_builder.add_column('record_time').type(kudu.string).nullable(False)
         rm_builder.add_column('tag_id').type(kudu.int32).nullable(False)
         rm_builder.add_column('value').type(kudu.double).nullable(False)
         rm_builder.set_primary_keys(['record_time','tag_id'])
@@ -155,33 +155,42 @@ class DataGenerator():
     # Generate well sensor data (either historic or in real-time)
     def generate_sensor_data(self, historic = False):
         print 'Generating sensor device historical data'
+        meas_table = self._kudu_client.table('measurements')
+        raw_table = self._kudu_client.table('raw_measurements')
 
-        months_history = self._config['months_history']
+        days_history = self._config['days_history']
         measurement_interval = self._config['measurement_interval']
         wells = self._config['wells']
         device_entities = self._config['device_entities']
 
         if historic:
             end_date = datetime.datetime.now()
-            start_date = end_date - dateutil.relativedelta.relativedelta(months=months_history)
+            start_date = end_date - dateutil.relativedelta.relativedelta(days=days_history)
         else:
             start_date = datetime.datetime.now()
-            end_date = start_date + dateutil.relativedelta.relativedelta(months=months_history)
+            end_date = start_date + dateutil.relativedelta.relativedelta(days=days_history)
 
         for date in [start_date + datetime.timedelta(seconds = x)
                      for x in range(0, int((end_date-start_date).total_seconds()), measurement_interval)]:
             date_str = date.strftime('%Y-%m-%d %H:%M:%S')
             for well_id in range(1, wells+1):
                 # Generate measurement for a random device
-                num_sensors = random.randint(1,len(device_entities))
-                for device_id in range(1,num_sensors):
-                    payload = {}
-                    payload['record_time'] = date_str
-                    payload['tag_id'] = int('%d%d' % (well_id, device_id))
-                    payload['value'] = random.uniform(50,100)
+                raw_measurement = {}
+                measurement = {}
+                raw_measurement['record_time'] = date_str
+                measurement['record_time'] = long(time.mktime(date.timetuple()))
+                measurement['well_id'] = well_id
+                for device_id in range(0,len(device_entities)):
+                    raw_measurement['tag_id'] = int('%d%d' % (well_id, device_id))
+                    raw_measurement['value'] = random.random()*100+50
+                    measurement[device_entities[device_id]] = raw_measurement['value']
+                    if historic:
+                        self._kudu_session.apply(raw_table.new_upsert(raw_measurement))
+                        self._kudu_session.apply(meas_table.new_upsert(measurement))
+                    else:
+                        self._kafka_producer.send(self._config['kafka_topic'], value=json.dumps(raw_measurement))
+                
+                self._kudu_session.flush()            
 
-                    self._kafka_producer.send(self._config['kafka_topic'], value=json.dumps(payload))
-                    #print(json.dumps(payload))
-            
                 if not historic:     
                     time.sleep(measurement_interval)
