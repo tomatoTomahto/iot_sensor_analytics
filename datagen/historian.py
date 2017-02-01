@@ -25,7 +25,8 @@ dgen = DataGenerator(config)
 
 option = sys.argv[2]
 if option in ['static','all']:
-    dgen.generate_well_info()
+    dgen.create_tables()
+    #dgen.generate_well_info()
     dgen.generate_tag_mappings()
 if option in ['historic','all']:
     dgen.generate_sensor_data(historic=True)

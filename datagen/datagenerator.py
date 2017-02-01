@@ -1,5 +1,6 @@
 import random, datetime, dateutil.relativedelta, time, json
 import kudu
+from kudu.client import Partitioning
 from kafka import KafkaProducer
 
 # DataGenerator will produce the following data
@@ -18,8 +19,7 @@ class DataGenerator():
 
         # Hadoop Config Data
         self._config['kafka_brokers'] = config['hadoop']['kafka_brokers']
-        self._config['kafka_topic_src'] = config['hadoop']['kafka_topic_src']
-        self._config['kafka_topic_tgt'] = config['hadoop']['kafka_topic_tgt']
+        self._config['kafka_topic'] = config['hadoop']['kafka_topic']
         self._config['kudu_master'] = config['hadoop']['kudu_masters']
         self._config['kudu_port'] = config['hadoop']['kudu_port']
 
@@ -49,6 +49,54 @@ class DataGenerator():
     def _connect_kudu(self):
         self._kudu_client = kudu.connect(host=self._config['kudu_master'], port=self._config['kudu_port'])
         self._kudu_session = self._kudu_client.new_session()
+
+    # Create Kudu tables
+    def create_tables(self):
+        for table in ['tag_mappings', 'raw_measurements', 'measurements']:
+            if self._kudu_client.table_exists(table):
+                self._kudu_client.delete_table(table)
+
+        # Define a schema for a tag_mappings table
+        tm_builder = kudu.schema_builder()
+        tm_builder.add_column('tag_id').type(kudu.int32).nullable(False).primary_key()
+        tm_builder.add_column('well_id').type(kudu.int32).nullable(False)
+        tm_builder.add_column('sensor_name').type(kudu.string).nullable(False)
+        tm_schema = tm_builder.build()
+
+        # Define partitioning schema
+        tm_partitioning = Partitioning().add_hash_partitions(column_names=['tag_id'], num_buckets=3)
+
+        # Define a schema for a raw_measurements table
+        rm_builder = kudu.schema_builder()
+        rm_builder.add_column('record_time').type(kudu.int64).nullable(False)
+        rm_builder.add_column('tag_id').type(kudu.int32).nullable(False)
+        rm_builder.add_column('value').type(kudu.double).nullable(False)
+        rm_builder.set_primary_keys(['record_time','tag_id'])
+        rm_schema = rm_builder.build()
+
+        # Define partitioning schema
+        rm_partitioning = Partitioning().add_hash_partitions(column_names=['record_time','tag_id'], 
+                                                             num_buckets=3)
+
+        tag_entities = self._config['device_entities']
+
+        # Define a schema for a measurements table
+        m_builder = kudu.schema_builder()
+        m_builder.add_column('record_time').type(kudu.int32).nullable(False)
+        m_builder.add_column('well_id').type(kudu.int32).nullable(False)
+        for entity in tag_entities:
+            m_builder.add_column(entity).type(kudu.double).nullable(True)
+        m_builder.set_primary_keys(['record_time','well_id'])
+        m_schema = m_builder.build()
+
+        # Define partitioning schema
+        m_partitioning = Partitioning().add_hash_partitions(column_names=['record_time','well_id'], 
+                                                            num_buckets=3)
+
+        # Create new table
+        self._kudu_client.create_table('tag_mappings', tm_schema, tm_partitioning, n_replicas=1)
+        self._kudu_client.create_table('raw_measurements', rm_schema, rm_partitioning, n_replicas=1)
+        self._kudu_client.create_table('measurements', m_schema, m_partitioning, n_replicas=1)
 
     # Generate well information and write to Kudu
     def generate_well_info(self):
@@ -90,7 +138,7 @@ class DataGenerator():
     def generate_tag_mappings(self):
         print 'Generating tag ID/description mappings'
         tag_mapping = {}
-        table = self._kudu_client.table('well_tags')
+        table = self._kudu_client.table('tag_mappings')
 
         wells = self._config['wells']
         device_entities = self._config['device_entities']
@@ -99,7 +147,7 @@ class DataGenerator():
             for device_id in range(0, len(device_entities)):
                 tag_mapping['tag_id'] = int('%d%d' % (well_id, device_id))
                 tag_mapping['well_id'] = well_id
-                tag_mapping['tag_entity'] = '%s' % (device_entities[device_id])
+                tag_mapping['sensor_name'] = '%s' % (device_entities[device_id])
                 self._kudu_session.apply(table.new_upsert(tag_mapping))
 
         self._kudu_session.flush()
@@ -124,16 +172,16 @@ class DataGenerator():
                      for x in range(0, int((end_date-start_date).total_seconds()), measurement_interval)]:
             date_str = date.strftime('%Y-%m-%d %H:%M:%S')
             for well_id in range(1, wells+1):
-                for device_id in range(0, len(device_entities)):
+                # Generate measurement for a random device
+                num_sensors = random.randint(1,len(device_entities))
+                for device_id in range(1,num_sensors):
                     payload = {}
                     payload['record_time'] = date_str
                     payload['tag_id'] = int('%d%d' % (well_id, device_id))
                     payload['value'] = random.uniform(50,100)
-                    #payload['message'] = '%s,%d,%f' % (date_str,tag_id,value)
 
-                    self._kafka_producer.send(self._config['kafka_topic_src'], value=json.dumps(payload))
-#                    self._kafka_producer.send(self._config['kafka_topic_tgt'], value=json.dumps(payload))
+                    self._kafka_producer.send(self._config['kafka_topic'], value=json.dumps(payload))
                     #print(json.dumps(payload))
             
-            if not historic:     
-                time.sleep(measurement_interval)
+                if not historic:     
+                    time.sleep(measurement_interval)
