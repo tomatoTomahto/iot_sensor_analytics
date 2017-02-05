@@ -9,21 +9,28 @@
  * HUE
 2. StreamSets Data Collector 2.2.1.0
 3. Anaconda Parcel for Cloudera
-4. Anaconda Distribution of Python 2.7, including the following modules:
-* kudu
-* kafka
 
-## Setup Instructions
-1. Create a Kafka topic 
-2. Edit config.ini with the desired data generator and hadoop settings
-3. Create the required Impala tables
-4. Create the required Solr collections
+## Setup
+1. Run the setup script to install Python libraries
+ ```bash setup/install.sh```
+2. Edit Streamsets Configuration in Cloudera Manager:
+ Data Collector Advanced Configuration Snippet (Safety Valve) for sdc-env.sh:
+ ```export STREAMSETS_LIBRARIES_EXTRA_DIR="/opt/sdclib/"```
+ Data Collector Advanced Configuration Snippet (Safety Valve) for sdc-security.policy:
+ ```grant codebase "file:///opt/sdclib/-" { permission java.security.AllPermission; };```
+3. Restart Streamsets
 
-## Execution Instructions
-1. Start the Spark streaming application
-2. Start the data generator application
-3. Start the StreamSets pipeline
+## Initialize
+1. Edit config.ini with the desired data generator (# wells, sensors, history etc.) and hadoop settings (kafka and kudu servers)
+2. Create tables to store sensor data in Kudu and generate static lookup information:
+ ```python datagen/historian.py config.ini static```
+3. Generate historic data and store in Kudu
+ ```python datagen/historian.py config.ini historic```
+4. Open Kudu web UI and navigate to the tables that were created, extract Impala DDL statements and run them in HUE
+5. Open Streamsets, import pipeline by uploading pipeline config file: streamsets/historian_ingest.json
+6. Open Streamsets pipeline, edit constants to indicate kafka broker servers and kudu master server
 
-## Analysis Instructions
-1. StreamSets
-2. HUE
+## Run
+1. Start Streamsets pipeline
+2. Start sensor data generator:
+ ```python datagen/historian.py config.ini realtime```
