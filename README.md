@@ -34,3 +34,11 @@
 1. Start Streamsets pipeline
 2. Start sensor data generator:
 ```python datagen/historian.py config.ini realtime```
+
+## Analyze
+1. Solr (not included in git repo)
+ * Create a collection for the measurements data
+ * Create a Hue dashboard based on the measurements data
+ * Add a destination in Streamsets to send measurement data to Solr collection
+2. Impala
+ * Run queries in ```impala``` directory
