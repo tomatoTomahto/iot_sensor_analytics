@@ -1,4 +1,6 @@
 # cdh_historian
+For information on use case and technical architecture, see PDF in ```slides``` directory. 
+
 ## Pre-Requisites
 1. CDH 5.10, including the following services:
  * Impala
