@@ -82,7 +82,7 @@ class DataGenerator():
 
         # Define a schema for a measurements table
         m_builder = kudu.schema_builder()
-        m_builder.add_column('record_time').type(kudu.int32).nullable(False)
+        m_builder.add_column('record_time').type(kudu.string).nullable(False)
         m_builder.add_column('well_id').type(kudu.int32).nullable(False)
         for entity in tag_entities:
             m_builder.add_column(entity).type(kudu.double).nullable(True)
@@ -178,9 +178,12 @@ class DataGenerator():
                 raw_measurement = {}
                 measurement = {}
                 raw_measurement['record_time'] = date_str
-                measurement['record_time'] = long(time.mktime(date.timetuple()))
+                measurement['record_time'] = date_str
                 measurement['well_id'] = well_id
-                for device_id in range(0,len(device_entities)):
+                num_devices = len(device_entities)
+                if not historic:
+                    num_devices = random.randint(0,len(device_entities))
+                for device_id in range(0,num_devices):
                     raw_measurement['tag_id'] = int('%d%d' % (well_id, device_id))
                     raw_measurement['value'] = random.random()*100+50
                     measurement[device_entities[device_id]] = raw_measurement['value']
