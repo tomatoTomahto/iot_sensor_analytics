@@ -1,0 +1,12 @@
+{"sensor_name": "temperature_sensor", "tag_id": 10, "well_id": 1}
+{"sensor_name": "flow_rate", "tag_id": 11, "well_id": 1}
+{"sensor_name": "casing_pressure", "tag_id": 12, "well_id": 1}
+{"sensor_name": "tubing_pressure", "tag_id": 13, "well_id": 1}
+{"sensor_name": "temperature_sensor", "tag_id": 20, "well_id": 2}
+{"sensor_name": "flow_rate", "tag_id": 21, "well_id": 2}
+{"sensor_name": "casing_pressure", "tag_id": 22, "well_id": 2}
+{"sensor_name": "tubing_pressure", "tag_id": 23, "well_id": 2}
+{"sensor_name": "temperature_sensor", "tag_id": 30, "well_id": 3}
+{"sensor_name": "flow_rate", "tag_id": 31, "well_id": 3}
+{"sensor_name": "casing_pressure", "tag_id": 32, "well_id": 3}
+{"sensor_name": "tubing_pressure", "tag_id": 33, "well_id": 3}

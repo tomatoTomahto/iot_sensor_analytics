@@ -1,4 +1,4 @@
-from datagenerator import DataGenerator
+from datagenerator_local import DataGenerator
 from configparser import ConfigParser
 import os, sys
 
@@ -26,9 +26,9 @@ dgen = DataGenerator(config)
 option = sys.argv[2]
 if option in ['static','all']:
     dgen.create_tables()
-    #dgen.generate_well_info()
+    dgen.generate_well_info()
     dgen.generate_tag_mappings()
 if option in ['historic','all']:
-    dgen.generate_sensor_data(historic=True)
+    dgen.generate_sensor_data(historic=True, file=True)
 if option in ['realtime','all']:
-    dgen.generate_sensor_data(historic=False)
+    dgen.generate_sensor_data(historic=False, file=True)
