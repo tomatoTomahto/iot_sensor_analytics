@@ -9,6 +9,13 @@ from kafka import KafkaProducer
 # - historical well sensor data - tag, time, value, confidence (todo)
 # - real-time well sensor data - tag, time, value, confidence (todo)
 class DataGenerator():
+    PROGRAM_MAINT = 'Program maintenance tests all passed'
+    PREVENT_MAINT = '%s sensor near threshold. Preventive maintenance required. Replaced component'
+    CORRECT_MAINT = '%s sensor exceeded threshold. Corrective maintenance required. Replaced malfunctioning components'
+    PROGRAM_COST = 20000
+    PREVENT_COST = 10000
+    CORRECT_COST = 200000
+
     # Initialize generator by reading in all config values
     def __init__(self, config):
         for section in ['well info', 'hadoop']:
@@ -36,6 +43,7 @@ class DataGenerator():
         self._config['well_chemicals'] = config['well info']['well_chemicals'].split(',')
         self._config['max_leakage_risk'] = int(config['well info']['max_leakage_risk'])
         self._config['device_entities'] = config['sensor device data']['device_entities'].split(',')
+        self._config['predicted_entity'] = config['sensor device data']['predicted_entity']
         self._config['measurement_interval'] = int(config['sensor device data']['measurement_interval'])
 
         #self._connect_kafka()
@@ -95,8 +103,8 @@ class DataGenerator():
 
         days_history = self._config['days_history']
         measurement_interval = self._config['measurement_interval']
-        wells = self._config['wells']
         device_entities = self._config['device_entities']
+        predicted_entity = self._config['predicted_entity']
 
         if historic:
             end_date = datetime.datetime.now()
@@ -105,30 +113,40 @@ class DataGenerator():
             start_date = datetime.datetime.now()
             end_date = start_date + dateutil.relativedelta.relativedelta(days=days_history)
 
-        for date in [start_date + datetime.timedelta(seconds = x)
-                     for x in range(0, int((end_date-start_date).total_seconds()), measurement_interval)]:
-            date_str = date.strftime('%Y-%m-%d %H:%M:%S')
-            for well_id in range(1, wells+1):
+        simulation_day = 0
+        for simulation_date in [start_date + datetime.timedelta(days = x)
+                     for x in range(0, days_history)]:
+            end_of_day = simulation_date.replace(hour=0,minute=0,second=0,microsecond=0) + datetime.timedelta(days=1)
+
+            simulation_day += 1
+            program_maint = (simulation_day % 5 == 0)       # program maintenance every 5 days
+            fault = random.random() < 0.17                  # fault 17% of the time
+            warning = not fault and random.random() < 0.1  # warning 10% of the time
+            faulty_device = random.randint(0, len(device_entities) - 1)
+            num_devices = len(device_entities)
+
+            for simulation_time in [simulation_date + datetime.timedelta(seconds = x)
+                     for x in range(0, int((end_of_day-simulation_date).total_seconds()), measurement_interval)]:
+                date_str = simulation_time.strftime('%Y-%m-%d %H:%M:%S')
                 # Generate measurement for a random device
                 raw_measurement = {}
                 measurement = {}
                 raw_measurement['record_time'] = date_str
                 measurement['record_time'] = date_str
-                measurement['well_id'] = well_id
-                num_devices = len(device_entities)
                 if not historic:
                     num_devices = random.randint(0,len(device_entities))
                 for device_id in range(0,num_devices):
-                    raw_measurement['tag_id'] = int('%d%d' % (well_id, device_id))
-                    raw_measurement['value'] = random.random()*100+50
+                    raw_measurement['tag_id'] = int('%d' % device_id)
+                    raw_measurement['value'] = random.random()*(device_id+1)+(device_id+1)*50
+                    if fault and device_id == faulty_device:
+                        raw_measurement['value'] *= (1+random.random()*0.25+0.75)
+                    elif warning and device_id == faulty_device:
+                        raw_measurement['value'] *= (1+random.random()*0.25+0.5)
                     measurement[device_entities[device_id]] = raw_measurement['value']
                     if historic:
                         if file:
                             with open('sampledata/raw_measurements.json','a') as outfile:
                                 json.dump(raw_measurement, outfile)
-                                outfile.write('\n')
-                            with open('sampledata/measurements.json','a') as outfile:
-                                json.dump(measurement, outfile)
                                 outfile.write('\n')
                     else:
                         if file:
@@ -138,5 +156,54 @@ class DataGenerator():
                         else:
                             self._kafka_producer.send(self._config['kafka_topic'], value=json.dumps(raw_measurement))
 
-                if not historic:     
+                # Generate measurement for predicted device
+                predicted_measurement = {}
+                predicted_measurement['tag_id'] = int('%d' % len(device_entities))
+                predicted_measurement['value'] = 0
+                for device_id in range(0,len(device_entities)):
+                    predicted_measurement['value'] += measurement[device_entities[device_id]] * \
+                                                      (random.random()*(device_id+1)+device_id*10)
+                measurement[predicted_entity] = predicted_measurement['value']
+                if historic:
+                    if file:
+                        with open('sampledata/raw_measurements.json', 'a') as outfile:
+                            json.dump(predicted_measurement, outfile)
+                            outfile.write('\n')
+                        with open('sampledata/measurements.json','a') as outfile:
+                            json.dump(measurement, outfile)
+                            outfile.write('\n')
+                else:
+                    if file:
+                        with open('sampledata/raw_measurements.json', 'a') as outfile:
+                            json.dump(predicted_measurement, outfile)
+                            outfile.write('\n')
+                    else:
+                        self._kafka_producer.send(self._config['kafka_topic'], value=json.dumps(raw_measurement))
+
+                if not historic:
                     time.sleep(measurement_interval)
+
+            if program_maint or fault:
+                self._generate_maintenance_report(date=simulation_date,
+                                                  warn=warning,
+                                                  fault=fault,
+                                                  faulty_device_id=faulty_device)
+
+
+    def _generate_maintenance_report(self, date, warn, fault, faulty_device_id):
+        faulty_device = self._config['device_entities'][faulty_device_id]
+
+        if fault:
+            message = self.CORRECT_MAINT % faulty_device
+            date = date + datetime.timedelta(days=2)
+            cost = faulty_device_id*self.PREVENT_COST + self.CORRECT_COST
+        elif warn:
+            message = self.PREVENT_MAINT % faulty_device
+            date = date + datetime.timedelta(days=1)
+            cost = faulty_device_id*self.PREVENT_COST
+        else:
+            message = self.PROGRAM_MAINT
+            cost = self.PROGRAM_COST
+
+        with open('sampledata/maintenance_logs.txt', 'a') as outfile:
+            outfile.write('%s | %s | %d \n' % (date.strftime('%Y-%m-%d'), message, cost))
