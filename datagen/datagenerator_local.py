@@ -9,12 +9,12 @@ from kafka import KafkaProducer
 # - historical well sensor data - tag, time, value, confidence (todo)
 # - real-time well sensor data - tag, time, value, confidence (todo)
 class DataGenerator():
-    PROGRAM_MAINT = 'Program maintenance tests all passed'
-    PREVENT_MAINT = '%s sensor near threshold. Preventive maintenance required. Replaced component'
-    CORRECT_MAINT = '%s sensor exceeded threshold. Corrective maintenance required. Replaced malfunctioning components'
-    PROGRAM_COST = 20000
-    PREVENT_COST = 10000
-    CORRECT_COST = 200000
+    PROGRAM_MAINT = 'Program maintenance tests all passed. Asset healthy. Sensor readings normal'
+    PREVENT_MAINT = '%s sensor showing abnormal readings. Preventive maintenance required. Scheduling component replacement'
+    CORRECT_MAINT = 'Asset failure due to high %s sensor and %s. Asset shutdown. Corrective maintenance required.'
+    PROGRAM_COST = 20000 # Cost for doing some maintenance
+    PREVENT_COST = 10000 # Cost for replacing a component
+    CORRECT_COST = 200000 #
 
     # Initialize generator by reading in all config values
     def __init__(self, config):
@@ -108,21 +108,58 @@ class DataGenerator():
 
         if historic:
             end_date = datetime.datetime.now()
-            start_date = end_date - dateutil.relativedelta.relativedelta(days=days_history)
+            start_date = (end_date - dateutil.relativedelta.relativedelta(days=days_history))\
+                            .replace(hour=0,minute=0,second=0,microsecond=0)
         else:
             start_date = datetime.datetime.now()
             end_date = start_date + dateutil.relativedelta.relativedelta(days=days_history)
 
         simulation_day = 0
+        fault = False
+        warning = False
+        state = 0  # 0=healthy, 1=warning, 2=critical, 3=shutdown
+        faulty_device = 0
         for simulation_date in [start_date + datetime.timedelta(days = x)
                      for x in range(0, days_history)]:
             end_of_day = simulation_date.replace(hour=0,minute=0,second=0,microsecond=0) + datetime.timedelta(days=1)
 
             simulation_day += 1
             program_maint = (simulation_day % 5 == 0)       # program maintenance every 5 days
-            fault = random.random() < 0.17                  # fault 17% of the time
-            warning = not fault and random.random() < 0.1  # warning 10% of the time
-            faulty_device = random.randint(0, len(device_entities) - 1)
+
+            if state==0: # Healthy
+                if random.random() <= 0.17:
+                    state=1
+                    faulty_device = random.randint(0, len(device_entities) - 1)
+            elif state==1: # Warning
+                if random.random() <= 0.50:
+                    state=2
+                    program_maint=False
+            elif state==2: # Critical
+                state=3 # Automatically shutdown state
+                program_maint=False
+            else: state=0 # Shutdown
+
+            # Determine maintenance task
+            # if warning and not fault: # If we had a warning yesterday
+            #     if not program_maint: # If no program maintenance, then fault will occur
+            #         fault = True
+            #         state=2
+            #     else:
+            #         warning = False  # If program maintenance, then warning will be reset
+            #         fault = False   # If program maintenance, then fault will be avoided
+            #         state=0
+            # elif warning and fault:   # If we had a warning and a fault already, reset and shutdown
+            #     warning = False
+            #     fault = False
+            #     program_maint = False
+            #     state=3
+            # else:                   # If no warning yet, then generate a warning 17% of the time
+            #     warning = (simulation_day % 10 == 0)
+            #     if warning: state=1
+
+            with open('sampledata/well_state.txt', 'a') as outfile:
+                outfile.write('%s,%d\n' % (simulation_date.strftime('%Y-%m-%d'), state))
+
             num_devices = len(device_entities)
 
             for simulation_time in [simulation_date + datetime.timedelta(seconds = x)
@@ -138,10 +175,12 @@ class DataGenerator():
                 for device_id in range(0,num_devices):
                     raw_measurement['tag_id'] = int('%d' % device_id)
                     raw_measurement['value'] = random.random()*(device_id+1)+(device_id+1)*50
-                    if fault and device_id == faulty_device:
-                        raw_measurement['value'] *= (1+random.random()*0.25+0.75)
-                    elif warning and device_id == faulty_device:
-                        raw_measurement['value'] *= (1+random.random()*0.25+0.5)
+                    if state==3:
+                        raw_measurement['value'] = 0
+                    if state==2 and device_id == faulty_device:
+                        raw_measurement['value'] *= 2#(1+random.random()*0.25+0.75)
+                    elif state==1 and device_id == faulty_device:
+                        raw_measurement['value'] *= 3#(1+random.random()*0.25+0.5)
                     measurement[device_entities[device_id]] = raw_measurement['value']
                     if historic:
                         if file:
@@ -159,10 +198,11 @@ class DataGenerator():
                 # Generate measurement for predicted device
                 predicted_measurement = {}
                 predicted_measurement['tag_id'] = int('%d' % len(device_entities))
+                predicted_measurement['record_time'] = date_str
                 predicted_measurement['value'] = 0
                 for device_id in range(0,len(device_entities)):
                     predicted_measurement['value'] += measurement[device_entities[device_id]] * \
-                                                      (random.random()*(device_id+1)+device_id*10)
+                                                      (random.random()*(device_id+1.25)+device_id*10)
                 measurement[predicted_entity] = predicted_measurement['value']
                 if historic:
                     if file:
@@ -183,27 +223,30 @@ class DataGenerator():
                 if not historic:
                     time.sleep(measurement_interval)
 
-            if program_maint or fault:
-                self._generate_maintenance_report(date=simulation_date,
-                                                  warn=warning,
-                                                  fault=fault,
+            if program_maint or state==3:
+                self._generate_maintenance_report(date=simulation_time,
+                                                  state=state,
                                                   faulty_device_id=faulty_device)
+                state=0 # Reset to healthy
+                faulty_device = 0
 
 
-    def _generate_maintenance_report(self, date, warn, fault, faulty_device_id):
+    def _generate_maintenance_report(self, date, state, faulty_device_id):
         faulty_device = self._config['device_entities'][faulty_device_id]
+        predicted_device = self._config['predicted_entity']
 
-        if fault:
-            message = self.CORRECT_MAINT % faulty_device
-            date = date + datetime.timedelta(days=2)
-            cost = faulty_device_id*self.PREVENT_COST + self.CORRECT_COST
-        elif warn:
+        if state==3:
+            message = self.CORRECT_MAINT % (faulty_device, predicted_device)
+            cost = self.PROGRAM_COST + (1+faulty_device_id)*self.PREVENT_COST + self.CORRECT_COST
+        elif state==2 or state==1:
             message = self.PREVENT_MAINT % faulty_device
-            date = date + datetime.timedelta(days=1)
-            cost = faulty_device_id*self.PREVENT_COST
+            cost = self.PROGRAM_COST + (1+faulty_device_id)*self.PREVENT_COST
         else:
             message = self.PROGRAM_MAINT
             cost = self.PROGRAM_COST
 
+        with open('sampledata/maintenance_costs.csv', 'a') as outfile:
+            outfile.write('%s,%d\n' % (date.strftime('%Y-%m-%d'), cost))
+
         with open('sampledata/maintenance_logs.txt', 'a') as outfile:
-            outfile.write('%s | %s | %d \n' % (date.strftime('%Y-%m-%d'), message, cost))
+            outfile.write('%s|%s\n' % (date.strftime('%Y-%m-%d'), message))

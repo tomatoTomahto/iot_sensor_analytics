@@ -6,4 +6,3 @@
 *.log
 spark-warehouse/
 *db/
-datascience/
