@@ -8,3 +8,5 @@
 *.log
 spark-warehouse/
 *db/
+sampledata/
+rf_sensor_maintenance.mdl/

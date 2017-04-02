@@ -1,0 +1,318 @@
+{
+  "_etag": "\"134ab67e053cbf2921859fea670b23de\"", 
+  "_mod": "Fri, 31 Mar 2017 18:15:39 GMT", 
+  "_url": "https://repo.continuum.io/pkgs/free/noarch", 
+  "info": {
+    "arch": null, 
+    "platform": null, 
+    "subdir": "noarch"
+  }, 
+  "packages": {
+    "alpaca_static-1.5.17-3.tar.bz2": {
+      "build": "3", 
+      "build_number": 3, 
+      "date": "2016-08-26", 
+      "depends": [
+        "bootstrap_static >=3.2.0", 
+        "handlebars_static >=3.0.3", 
+        "jquery_static"
+      ], 
+      "license": "Apache License 2.0", 
+      "license_family": "Apache", 
+      "md5": "40a3c7469e169fd4d1a56c36ea4c3482", 
+      "name": "alpaca_static", 
+      "size": 817943, 
+      "version": "1.5.17"
+    }, 
+    "alpaca_static-1.5.22-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2017-01-20", 
+      "depends": [
+        "bootstrap_static ==3.3.2", 
+        "handlebars_static ==4.0.5", 
+        "jquery_static >=2.1.0"
+      ], 
+      "license": "Apache License 2.0", 
+      "license_family": "Apache", 
+      "md5": "dc8b7c20a7beef8ac7213ef83091077f", 
+      "name": "alpaca_static", 
+      "noarch": true, 
+      "size": 869738, 
+      "version": "1.5.22"
+    }, 
+    "blz-removed-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2016-03-25", 
+      "depends": [], 
+      "license": "BSD", 
+      "md5": "dad5a21d182f83130f1f0ed2a379118c", 
+      "name": "blz", 
+      "size": 291, 
+      "version": "removed"
+    }, 
+    "bootstrap_static-3.3.1-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2016-08-26", 
+      "depends": [
+        "jquery_static"
+      ], 
+      "license": "MIT license", 
+      "license_family": "MIT", 
+      "md5": "40950193c64e3c815df75dd07649f4c0", 
+      "name": "bootstrap_static", 
+      "size": 205920, 
+      "version": "3.3.1"
+    }, 
+    "continuum-docs-2.0.0-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2016-06-14", 
+      "depends": [], 
+      "license_family": "Other", 
+      "md5": "a14efef77683c55f6302b9ce9f083135", 
+      "name": "continuum-docs", 
+      "size": 9221218, 
+      "version": "2.0.0"
+    }, 
+    "continuum-docs-2.0.1-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2016-10-18", 
+      "depends": [], 
+      "license_family": "Other", 
+      "md5": "ac1347f0b5fcafb6b196e3dd8b747295", 
+      "name": "continuum-docs", 
+      "size": 22417803, 
+      "version": "2.0.1"
+    }, 
+    "continuum-docs-2.0.2-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2016-11-03", 
+      "depends": [], 
+      "license_family": "Other", 
+      "md5": "ab761c9acaa93e418c73e8f1e0ec04c3", 
+      "name": "continuum-docs", 
+      "size": 25615741, 
+      "version": "2.0.2"
+    }, 
+    "continuum-docs-2.0.3-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2016-11-17", 
+      "depends": [], 
+      "license_family": "Other", 
+      "md5": "06e2c0ec48344ba16a21a0b6d9798f94", 
+      "name": "continuum-docs", 
+      "size": 27027747, 
+      "version": "2.0.3"
+    }, 
+    "continuum-docs-2.0.4-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2016-12-01", 
+      "depends": [], 
+      "license_family": "Other", 
+      "md5": "e445dd164a2c838a98712c918535489c", 
+      "name": "continuum-docs", 
+      "size": 27470101, 
+      "version": "2.0.4"
+    }, 
+    "continuum-docs-2.0.7-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2017-03-09", 
+      "depends": [], 
+      "license_family": "Other", 
+      "md5": "bd577574618d94dc6397b4e3e961d787", 
+      "name": "continuum-docs", 
+      "size": 34618425, 
+      "version": "2.0.7"
+    }, 
+    "continuum-docs-2.0.8-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2017-03-23", 
+      "depends": [], 
+      "license_family": "Other", 
+      "md5": "f1b085bdab6371226895972dc874393f", 
+      "name": "continuum-docs", 
+      "size": 38556845, 
+      "version": "2.0.8"
+    }, 
+    "dynd-python-removed-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2016-03-26", 
+      "depends": [], 
+      "license": "BSD", 
+      "md5": "00c399950aeb9bbe2c736cec90544cf3", 
+      "name": "dynd-python", 
+      "size": 297, 
+      "version": "removed"
+    }, 
+    "font-ttf-dejavu-sans-mono-2.37-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2017-02-04", 
+      "depends": [], 
+      "license": "BSD-3", 
+      "license_family": "BSD", 
+      "md5": "3ba2e10ab5178e53491297bb41bf1502", 
+      "name": "font-ttf-dejavu-sans-mono", 
+      "noarch": "generic", 
+      "size": 395204, 
+      "version": "2.37"
+    }, 
+    "font-ttf-inconsolata-2.000-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2017-02-04", 
+      "depends": [], 
+      "license": "OFL", 
+      "license_family": "Other", 
+      "md5": "5693f9dc628dc3873328889c4139d3cb", 
+      "name": "font-ttf-inconsolata", 
+      "noarch": "generic", 
+      "size": 99247, 
+      "version": "2.000"
+    }, 
+    "font-ttf-source-code-pro-2.030-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2017-02-04", 
+      "depends": [], 
+      "license": "SIL Open Font License, Version 1.1", 
+      "license_family": "Other", 
+      "md5": "858fc42bcc490ffaa91b4c2d0cf2db46", 
+      "name": "font-ttf-source-code-pro", 
+      "noarch": "generic", 
+      "size": 949912, 
+      "version": "2.030"
+    }, 
+    "font-ttf-ubuntu-0.83-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2017-02-04", 
+      "depends": [], 
+      "license": "Ubuntu Font Licence Version 1.0", 
+      "license_family": "Other", 
+      "md5": "bd1d2c61cbafd6a68d107f4f18e57f65", 
+      "name": "font-ttf-ubuntu", 
+      "noarch": "generic", 
+      "size": 1884025, 
+      "version": "0.83"
+    }, 
+    "fonts-continuum-1-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2017-02-04", 
+      "depends": [
+        "font-ttf-dejavu-sans-mono", 
+        "font-ttf-inconsolata", 
+        "font-ttf-source-code-pro", 
+        "font-ttf-ubuntu"
+      ], 
+      "license": "Unknown", 
+      "license_family": "Other", 
+      "md5": "b31ac65142b4451b9f9c33583d68c7a9", 
+      "name": "fonts-continuum", 
+      "noarch": "generic", 
+      "size": 2133, 
+      "version": "1"
+    }, 
+    "futures-compat-1.0-py2_0.tar.bz2": {
+      "build": "py2_0", 
+      "build_number": 0, 
+      "date": "2016-03-26", 
+      "depends": [
+        "futures", 
+        "python 2.*"
+      ], 
+      "license_family": "BSD", 
+      "md5": "0208dcc06a097497dba36c6ba3eb3801", 
+      "name": "futures-compat", 
+      "size": 317, 
+      "version": "1.0"
+    }, 
+    "futures-compat-1.0-py3_0.tar.bz2": {
+      "build": "py3_0", 
+      "build_number": 0, 
+      "date": "2016-03-26", 
+      "depends": [
+        "python 3.*"
+      ], 
+      "license_family": "BSD", 
+      "md5": "e3d52c397a27973bc694e31f41768154", 
+      "name": "futures-compat", 
+      "size": 313, 
+      "version": "1.0"
+    }, 
+    "handlebars_static-3.0.3-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2016-08-26", 
+      "depends": [], 
+      "license": "MIT license", 
+      "license_family": "MIT", 
+      "md5": "6c242565dbf0060a8843b829b97517a1", 
+      "name": "handlebars_static", 
+      "size": 61984, 
+      "version": "3.0.3"
+    }, 
+    "handlebars_static-4.0.5-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2016-08-26", 
+      "depends": [], 
+      "license": "MIT license", 
+      "license_family": "MIT", 
+      "md5": "bdb6a93a437852911bb570ec942a03a3", 
+      "name": "handlebars_static", 
+      "size": 131818, 
+      "version": "4.0.5"
+    }, 
+    "jquery_static-1.11.1-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2016-08-26", 
+      "depends": [], 
+      "license": "MIT license", 
+      "license_family": "MIT", 
+      "md5": "aea910dbf32b03741ee8c77e8062a7f1", 
+      "name": "jquery_static", 
+      "size": 149066, 
+      "version": "1.11.1"
+    }, 
+    "jquery_static-3.1.1-0.tar.bz2": {
+      "build": "0", 
+      "build_number": 0, 
+      "date": "2017-01-20", 
+      "depends": [], 
+      "license": "MIT license", 
+      "license_family": "MIT", 
+      "md5": "b2a7ca3e95fa261ea329978dc89b70a7", 
+      "name": "jquery_static", 
+      "noarch": true, 
+      "size": 174719, 
+      "version": "3.1.1"
+    }, 
+    "matplotlib-tests-1.5.1-py_0.tar.bz2": {
+      "build": "py_0", 
+      "build_number": 0, 
+      "date": "2016-01-16", 
+      "depends": [
+        "python"
+      ], 
+      "license": "PSF-based", 
+      "license_family": "PSF", 
+      "md5": "23256aaa796a208646b9744860421c44", 
+      "name": "matplotlib-tests", 
+      "size": 35931550, 
+      "version": "1.5.1"
+    }
+  }
+}

@@ -1,0 +1,62 @@
+# This file created by conda-build 2.0.12
+# meta.yaml template originally from:
+# /home/ilan/anaconda/packages/python-2.7, last modified Tue Dec 20 22:43:26 2016
+# ------------------------------------------------
+
+package:
+    name: python
+    version: 2.7.13
+source:
+    fn: Python-2.7.13.tgz
+    md5: 17add4bf0ad0ec2f08e0cae6d205c700
+    patches:
+        - version.patch
+        - cprt.patch
+        - linux-clear_history.patch
+        - fix-readline-extra-space.patch
+    url: https://www.python.org/ftp/python/2.7.13/Python-2.7.13.tgz
+build:
+    detect_binary_files_with_prefix: 'False'
+    features: ''
+    no_link:
+        - bin/python2.7
+    number: '0'
+    string: '0'
+    track_features: ''
+requirements:
+    build: !!python/object:__builtin__.instancemethod {}
+    run:
+        - zlib 1.2.*
+        - sqlite 3.13.*
+        - readline 6.2
+        - tk 8.5.18
+        - openssl 1.0.2*
+test:
+    commands:
+        - python -V
+        - pydoc -h
+        - python-config --help
+        - idle -h
+    files:
+        - hello.txt.gz
+about:
+    description: 'Python is a widely used high-level, general-purpose, interpreted,
+        dynamic
+
+        programming language. Its design philosophy emphasizes code
+
+        readability, and its syntax allows programmers to express concepts in
+
+        fewer lines of code than would be possible in languages such as C++ or
+
+        Java. The language provides constructs intended to enable clear programs
+
+        on both a small and large scale.
+
+        '
+    dev_url: https://docs.python.org/devguide/
+    doc_url: https://www.python.org/doc/versions/
+    home: http://www.python.org/
+    license: PSF
+    license_file: LICENSE
+    summary: general purpose programming language
