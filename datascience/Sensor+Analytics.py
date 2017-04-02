@@ -1,63 +1,59 @@
 
-## Spark Library Imports
+# coding: utf-8
+
+# In[197]:
+
 from pyspark.sql import SparkSession
 from pyspark.sql.types import DateType, StringType, FloatType, StructField, StructType, IntegerType
 from pyspark.sql import functions as F
 from pyspark.ml.feature import Tokenizer, StopWordsRemover, NGram, CountVectorizer
 from pyspark.ml.clustering import LDA
 
-## Plotting Library Imports
-get_ipython().magic(u'matplotlib inline')
-import matplotlib.pyplot as plt
-import seaborn as sb
+get_ipython().magic(u'matplotlib notebook')
 import numpy as np
-import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec # subplots
+import pandas
+from pandas.tools.plotting import table
 
-## Create a Spark Session
-spark = SparkSession.builder.appName("Sensor Analytics").getOrCreate()
-sc = spark.sparkContext
+spark = SparkSession     .builder     .appName("Sensor Analytics")     .getOrCreate()
 
-# Step 1: Analyze Maintenance Costs and Logs
-## Visualize Maintenance Costs and Plot Over Time
-rawMaintCosts = sc.textFile("maintenance_costs.csv").map(lambda l: l.split(","))    
+
+# In[220]:
+
+# Plot the maintenance costs
+rawMaintCosts = sc.textFile("/Users/samir/Box Sync/Cloudera/Demos/cdh_historian/sampledata/maintenance_costs.csv")    .map(lambda l: l.split(","))
+    
 schemaString = "date cost"
-schema = StructType([StructField(field_name, StringType(), True) for field_name in ['date','cost']])
+fields = [StructField(field_name, StringType(), True) for field_name in schemaString.split()]
+schema = StructType(fields)
 maintCosts = spark.createDataFrame(rawMaintCosts, schema)
 maintCosts = maintCosts.select(maintCosts.date.cast('date'), maintCosts.cost.cast('int'))
-maintCostsPD = maintCosts.toPandas()
-maintCostsPD.head(20)
-maintCostsPD.describe()
-sb.distplot(maintCostsPD['cost'], kde_kws={"shade": True})
 
-## Analyze Maintenance Logs
-maintenance = spark.read.format("com.databricks.spark.csv").option("delimiter", "|")\
-  .load("maintenance_logs.txt")\
-  .withColumnRenamed('_c0','date')\
-  .withColumnRenamed('_c1','note')\
-  .withColumn('note', F.lower(F.regexp_replace('note', '[.!?-]', '')))\
-  .select(F.col('date').cast('date'), 'note')
-maintenance.show(5, truncate=False)
 
-### Text Analytics on Maintenance Notes
-#### Tokenize
+# In[264]:
+
+maintenance = spark.read.format("com.databricks.spark.csv")    .option("delimiter", "|")    .load("/Users/samir/Box Sync/Cloudera/Demos/cdh_historian/sampledata/maintenance_logs.txt")    .withColumnRenamed('_c0','date')    .withColumnRenamed('_c1','note')    .withColumn('note', F.lower(F.regexp_replace('note', '[.!?-]', '')))    .select(F.col('date').cast('date'), 'note')
+maintenance.show(30, truncate=False)
+
+# Tokenize maintenance notes
 tk = Tokenizer(inputCol="note", outputCol="words")
 maintTokenized = tk.transform(maintenance)
 
-#### Remove stop-words
+# Remove stop-words
 swr = StopWordsRemover(inputCol="words", outputCol="filtered")
 maintFiltered = swr.transform(maintTokenized)
 
-#### 3-word nGrams
+# Compute 2-word n-Grams
 ngram = NGram(n=3, inputCol="filtered", outputCol="ngrams")
 maintNGrams = ngram.transform(maintFiltered)
 
-#### CountVectorize converts nGram array into a vector of counts
-cv = CountVectorizer(inputCol="ngrams", outputCol="features", vocabSize=50)\
-  .fit(maintNGrams)
+# Compute n-Gram counts and vectorize
+cv = CountVectorizer(inputCol="ngrams", outputCol="features", vocabSize=50).fit(maintNGrams)
 maintVectors = cv.transform(maintNGrams)
 vocabArray = cv.vocabulary
 
-#### Topic identification using Latent Dirichlet allocation (LDA)
+# Topic identification using LDA
 lda = LDA(k=3, maxIter=10)
 ldaModel = lda.fit(maintVectors)
 topics = ldaModel.describeTopics(5)
@@ -67,7 +63,7 @@ for topic in topics.collect():
     for termIndex in topic[1]:
         print('\t%s' % vocabArray[termIndex])
 
-#### Visualize Maintenance Notes by Topic
+from pyspark.sql.functions import udf
 def f(clusterDistribution):
     if clusterDistribution[0] > 0.5:
         return 1
@@ -75,83 +71,60 @@ def f(clusterDistribution):
         return 2
     else: return 3
     
-findCluster = F.udf(f, IntegerType())
-maintTypes = ldaModel.transform(maintVectors)\
-  .select('date',findCluster('topicDistribution').alias('maintenanceType'))
-  
-maintClusters = maintTypes.join(maintCosts, 'date')\
-  .select('maintenanceType', 'cost')\
-  .toPandas()
-sb.pairplot(maintClusters, hue="maintenanceType")
+findCluster = udf(f, IntegerType())
+maint_types = ldaModel.transform(maintVectors).select('date','topicDistribution')    .withColumn('type',findCluster('topicDistribution'))    .select('date','type')
+maint_types.show()
 
-## TODO - plot maintenance cost vs. duration, color code with cluster
 
-from scipy.stats import kendalltau
-sb.set(style="ticks")
-sb.jointplot(maintClusters['cost'], maintClusters['maintenanceType'], 
-             kind="hex", stat_func=kendalltau, color="#4CB391")
+# In[223]:
+
+monthly_maintenance_types = maint_types.withColumn('program', maint_types.type==1)    .withColumn('preventive', maint_types.type==2)    .withColumn('corrective', maint_types.type==3)    .groupBy(F.date_format('date','yyyyMM').alias('month'))    .agg(F.count(F.when(F.col('program'), 1)).alias('program'),
+         F.count(F.when(F.col('preventive'), 1)).alias('preventive'),
+         F.count(F.when(F.col('corrective'), 1)).alias('corrective'))\
+    .orderBy('month')
+    
+monthly_maintenance_costs = maintCosts.groupBy(F.date_format('date','yyyyMM').alias('month'))    .agg(F.sum('cost').alias('cost'))    .orderBy('month')
+
+fig, ax1 = plt.subplots()
+ax2 = ax1.twinx()
+monthly_maintenance_types.toPandas().plot(kind='bar', stacked=True, x='month', ax=ax1,
+                                         title='Maintenance Costs Per Month Overlaid With Maintenance Type', legend=True)
+monthly_maintenance_costs.toPandas().plot(kind='line', x='month', y='cost', ax=ax2, color='DarkRed')
+
+
+# In[194]:
+
+maintVectors.filter(F.instr('note','corrective')>0)    .select(F.explode('ngrams').alias('ngram'))    .filter(F.instr('ngram','sensor')>0)    .groupBy('ngram')    .count()    .orderBy('count')    .toPandas().plot(kind='barh', x='ngram', title='Top nGrams About Sensors in Corrective Maintenance Logs', legend=False)
+plt.tight_layout()
+
+
+# In[269]:
 
 # Read in Sensor Measurements and Maintenance Notes
-measurements = spark.read.json("measurements.json")
+measurements = spark.read.json("/Users/samir/Box Sync/Cloudera/Demos/cdh_historian/sampledata/measurements.json")
+# measurements.describe().show()
 
-# Plot sensor measurements overlaid with maintenance types
-monthlySensors = measurements.groupBy(F.date_format('record_time', 'yyyyMM').alias('month'))\
-  .agg((F.avg('flow_rate')/30).alias('flow_rate (scaled)'),
-        F.avg('liquid_level').alias('liquid_level'), 
-        F.avg('pipe_pressure').alias('pipe_pressure'), 
-        F.avg('temperature').alias('temperature'), 
-        F.avg('torque').alias('torque'))\
-  .orderBy('month')\
-  .toPandas()
+fig, axes = plt.subplots(2,1)
+# measurements.groupBy(F.date_format('record_time', 'yyyyMM').alias('month'))\
+#     .agg((F.avg('flow_rate')/30).alias('flow_rate/30'),
+#          F.avg('liquid_level').alias('liquid_level'), 
+#          F.avg('pipe_pressure').alias('pipe_pressure'), 
+#          F.avg('temperature').alias('temperature'), 
+#          F.avg('torque').alias('torque'))\
+#     .orderBy('month')\
+#     .toPandas()\
+#     .plot(kind='line', x='month', title='Average Monthly Sensor Levels (2016-2017)')
 
-sb.boxplot(x="month", data=monthlySensors)
-
-# Plot correlation of values
-from pyspark.mllib.stat import Statistics
-
-meas = measurements.select('flow_rate', 'liquid_level', 'pipe_pressure', 'temperature', 'torque')
-features = meas.rdd.map(lambda row: row[0:])
-corr_mat=Statistics.corr(features, method="pearson")
-print(corr_mat)
-# Generate a mask for the upper triangle
-mask = np.zeros_like(corr_mat, dtype=np.bool)
-mask[np.triu_indices_from(mask)] = True
-
-# Generate a custom diverging colormap
-cmap = sb.diverging_palette(220, 10, as_cmap=True)
-
-sb.heatmap(corr_mat, mask=mask, xticklabels=meas.columns, yticklabels=meas.columns)
-
-# Draw the heatmap with the mask and correct aspect ratio
-sb.heatmap(corr_mat, mask=mask, cmap=cmap, vmax=.3,
-           square=True, xticklabels=5, yticklabels=5,
-           linewidths=.5, cbar_kws={"shrink": .5})
-  
-sb.heatmap(monthlySensors, linewidths=.5)
-
-measurements.groupBy(F.date_format('record_time', 'yyyyMM').alias('month'))\
-  .agg((F.avg('flow_rate')/30).alias('flow_rate/30'),
-          F.avg('liquid_level').alias('liquid_level'), 
-          F.avg('pipe_pressure').alias('pipe_pressure'), 
-          F.avg('temperature').alias('temperature'), 
-          F.avg('torque').alias('torque'))\
-     .orderBy('month')\
-     .toPandas()\
-     .plot(kind='line', x='month', title='Average Monthly Sensor Levels (2016-2017)')
-
-measurements.filter(F.add_months('record_time',3)>=F.current_date())\
-  .groupBy(F.date_format('record_time', 'yyyyMMdd').alias('day'))\
-  .agg((F.avg('flow_rate')/30).alias('flow_rate/30'),
-        F.avg('liquid_level').alias('liquid_level'), 
-        F.avg('pipe_pressure').alias('pipe_pressure'), 
-        F.avg('temperature').alias('temperature'), 
-        F.avg('torque').alias('torque'))\
+a = measurements.filter(F.add_months('record_time',3)>=F.current_date())    .groupBy(F.date_format('record_time', 'yyyyMMdd').alias('day'))    .agg((F.avg('flow_rate')/30).alias('flow_rate/30'),
+         F.avg('liquid_level').alias('liquid_level'), 
+         F.avg('pipe_pressure').alias('pipe_pressure'), 
+         F.avg('temperature').alias('temperature'), 
+         F.avg('torque').alias('torque'))\
     .orderBy('day')\
-    .toPandas()\
-    .plot(kind='line', x='day', title='Average Daily Sensor Levels (Jan-Mar 2017)')
-    
-axes[1].set_xticks(range(len(a)))
-axes[1].set_xticklabels(["%s" % item for item in a.day.tolist()], rotation=90)
+    .toPandas()
+a.plot(kind='line', x='day', title='Average Daily Sensor Levels (Jan-Mar 2017)', ax=axes[0], legend=False)
+axes[0].set_xticks(range(len(a)))
+axes[0].set_xticklabels(["%s" % item for item in a.day.tolist()], rotation=90)
 
 
 b = maint_types.filter(F.add_months('date',3)>=F.current_date())    .select(F.date_format('date','yyyyMMdd').alias('day'), 'type')    .orderBy('day')    .toPandas()
