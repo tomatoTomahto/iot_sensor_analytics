@@ -11,7 +11,7 @@ from kafka import KafkaProducer
 class DataGenerator():
     # Initialize generator by reading in all config values
     def __init__(self, config):
-        for section in ['well info', 'hadoop']:
+        for section in ['sensor device data', 'hadoop']:
             if section not in config:
                 raise Exception('Error: missing [%s] config' % (section))
 
@@ -24,17 +24,17 @@ class DataGenerator():
         self._config['kudu_port'] = config['hadoop']['kudu_port']
 
         # Well configuration data
-        self._config['wells'] = int(config['well info']['wells'])
+        #self._config['wells'] = int(config['well info']['wells'])
         self._config['days_history'] = int(config['sensor device data']['days_history'])
-        self._config['min_long'] = int(config['well info']['min_long'])
-        self._config['max_long'] = int(config['well info']['max_long'])
-        self._config['min_lat'] = int(config['well info']['min_lat'])
-        self._config['max_lat'] = int(config['well info']['max_lat'])
-        self._config['min_well_depth'] = int(config['well info']['min_well_depth'])
-        self._config['max_well_depth'] = int(config['well info']['max_well_depth'])
-        self._config['well_types'] = config['well info']['well_types'].split(',')
-        self._config['well_chemicals'] = config['well info']['well_chemicals'].split(',')
-        self._config['max_leakage_risk'] = int(config['well info']['max_leakage_risk'])
+        #self._config['min_long'] = int(config['well info']['min_long'])
+        #self._config['max_long'] = int(config['well info']['max_long'])
+        #self._config['min_lat'] = int(config['well info']['min_lat'])
+        #self._config['max_lat'] = int(config['well info']['max_lat'])
+        #self._config['min_well_depth'] = int(config['well info']['min_well_depth'])
+        #self._config['max_well_depth'] = int(config['well info']['max_well_depth'])
+        #self._config['well_types'] = config['well info']['well_types'].split(',')
+        #self._config['well_chemicals'] = config['well info']['well_chemicals'].split(',')
+        #self._config['max_leakage_risk'] = int(config['well info']['max_leakage_risk'])
         self._config['device_entities'] = config['sensor device data']['device_entities'].split(',')
         self._config['measurement_interval'] = int(config['sensor device data']['measurement_interval'])
 

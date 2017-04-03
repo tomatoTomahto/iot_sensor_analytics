@@ -19,17 +19,15 @@ config_file = sys.argv[1]
 if not os.path.isfile(config_file):
     raise Exception('Error: missing config file %s' % config_file)
 config = ConfigParser()
-config.read('config.ini')
+config.read(config_file)
 
 dgen = DataGenerator(config)
 
 option = sys.argv[2]
 if option in ['static','all']:
-    #dgen.create_tables()
-    #dgen.generate_well_info()
-    dgen.generate_tag_mappings()
+    dgen.create_tables()
+    #dgen.generate_tag_mappings()
 if option in ['historic','all']:
-    dgen.generate_tag_mappings()
-    dgen.generate_sensor_data(historic=True, file=True)
+    dgen.generate_sensor_data(historic=True)
 if option in ['realtime','all']:
-    dgen.generate_sensor_data(historic=False, file=True)
+    dgen.generate_sensor_data(historic=False)

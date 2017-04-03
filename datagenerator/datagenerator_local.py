@@ -21,7 +21,7 @@ class DataGenerator():
 
     # Initialize generator by reading in all config values
     def __init__(self, config):
-        for section in ['well info', 'hadoop']:
+        for section in ['sensor device data', 'hadoop']:
             if section not in config:
                 raise Exception('Error: missing [%s] config' % (section))
 
@@ -34,22 +34,12 @@ class DataGenerator():
         self._config['kudu_port'] = config['hadoop']['kudu_port']
 
         # Well configuration data
-        self._config['wells'] = int(config['well info']['wells'])
         self._config['days_history'] = int(config['sensor device data']['days_history'])
-        self._config['min_long'] = int(config['well info']['min_long'])
-        self._config['max_long'] = int(config['well info']['max_long'])
-        self._config['min_lat'] = int(config['well info']['min_lat'])
-        self._config['max_lat'] = int(config['well info']['max_lat'])
-        self._config['min_well_depth'] = int(config['well info']['min_well_depth'])
-        self._config['max_well_depth'] = int(config['well info']['max_well_depth'])
-        self._config['well_types'] = config['well info']['well_types'].split(',')
-        self._config['well_chemicals'] = config['well info']['well_chemicals'].split(',')
-        self._config['max_leakage_risk'] = int(config['well info']['max_leakage_risk'])
         self._config['sensors'] = int(config['sensor device data']['sensors'])
         self._config['measurement_interval'] = int(config['sensor device data']['measurement_interval'])
 
         self._predicted_entity = 5
-        self._prediction_entities = [1,3,7,10,13]
+        self._prediction_entities = [4,7,10,13,17]
 
         print('Predicted Sensor: %d, Prediction Sensors: %s' % (self._predicted_entity, self._prediction_entities))
         self._measurements = []
@@ -62,7 +52,7 @@ class DataGenerator():
 
     # Connect to Kafka
     def _connect_kafka(self):
-        self._kafka_producer = KafkaProducer(bootstrap_servers=self._config['kafka_brokers'],api_version=(0,9))
+        self._kafka_producer = KafkaProducer(bootstrap_servers=self._config['kafka_brokers'],api_version=(0,10))
 
     # Connect to Kudu
     def _connect_kudu(self):
@@ -71,7 +61,7 @@ class DataGenerator():
 
     # Create Kudu tables
     def create_tables(self):
-        for table in ['tag_mappings', 'raw_measurements', 'measurements']:
+        for table in ['measurements']:
             if self._kudu_client.table_exists(table):
                 self._kudu_client.delete_table(table)
 
@@ -99,19 +89,18 @@ class DataGenerator():
         # Define a schema for a measurements table
         m_builder = kudu.schema_builder()
         m_builder.add_column('record_time').type(kudu.string).nullable(False)
-        m_builder.add_column('well_id').type(kudu.int32).nullable(False)
         for device_id in range(0,self._config['sensors']):
             m_builder.add_column('Sensor_%d' % device_id).type(kudu.double).nullable(True)
-        m_builder.set_primary_keys(['record_time','well_id'])
+        m_builder.set_primary_keys(['record_time'])
         m_schema = m_builder.build()
 
         # Define partitioning schema
-        m_partitioning = Partitioning().add_hash_partitions(column_names=['record_time','well_id'],
+        m_partitioning = Partitioning().add_hash_partitions(column_names=['record_time'],
                                                             num_buckets=3)
 
         # Create new table
-        self._kudu_client.create_table('tag_mappings', tm_schema, tm_partitioning, n_replicas=3)
-        self._kudu_client.create_table('raw_measurements', rm_schema, rm_partitioning, n_replicas=3)
+        #self._kudu_client.create_table('tag_mappings', tm_schema, tm_partitioning, n_replicas=3)
+        #self._kudu_client.create_table('raw_measurements', rm_schema, rm_partitioning, n_replicas=3)
         self._kudu_client.create_table('measurements', m_schema, m_partitioning, n_replicas=3)
 
     # Generate well sensor device to tag description mappings
@@ -146,6 +135,8 @@ class DataGenerator():
             start_date = datetime.datetime.now()
             end_date = start_date + dateutil.relativedelta.relativedelta(days=days_history)
 
+        print('Simulation Duration [%s, %s]' % (start_date, end_date))
+
         simulation_day = 0
         state = 0   # 0=healthy, 1=warning, 2=critical, 3=shutdown
         faulty_device = 0
@@ -170,6 +161,9 @@ class DataGenerator():
             for simulation_time in [simulation_date + datetime.timedelta(seconds = x)
                      for x in range(0, int((end_of_day-simulation_date).total_seconds()), measurement_interval)]:
                 date_str = simulation_time.strftime('%Y-%m-%d %H:%M:%S')
+                if not historic:
+                    print('Time: %s' % date_str)
+
                 # Generate measurement for a random device
                 raw_measurement = {}
                 measurement = {}
@@ -181,7 +175,7 @@ class DataGenerator():
                         continue
 
                     raw_measurement['tag_id'] = int('%d' % device_id)
-                    raw_measurement['value'] = 1+device_id*(5+random.random()*device_id)
+                    raw_measurement['value'] = random.randint(1,4)+device_id*(5+random.random()*device_id)
                     if state==3:
                         raw_measurement['value'] = 0
                     elif state==2 and device_id == faulty_device:
@@ -193,8 +187,7 @@ class DataGenerator():
                     measurement['Sensor_%d' % device_id] = raw_measurement['value']
 
                     if historic:
-                        self._raw_measurements.append(json.dumps(raw_measurement))
-                        #print('%s|%d' % (date_str, device_id))
+                        self._kudu_session.apply(raw_table.new_upsert(raw_measurement))
                     else:
                         self._kafka_producer.send(self._config['kafka_topic'], value=json.dumps(raw_measurement))
 
@@ -209,9 +202,9 @@ class DataGenerator():
                                                       (random.random()*0.2+0.9)
 
                 if historic:
-                    self._kudu_session.apply(raw_table.new_upsert(raw_measurement))
+                    self._kudu_session.apply(raw_table.new_upsert(predicted_measurement))
                 else:
-                    self._kafka_producer.send(self._config['kafka_topic'], value=json.dumps(raw_measurement))
+                    self._kafka_producer.send(self._config['kafka_topic'], value=json.dumps(predicted_measurement))
                     time.sleep(measurement_interval)
 
             self._kudu_session.flush()
@@ -264,8 +257,8 @@ class DataGenerator():
         # self._maintenance_costs.append('%s,%d\n' % (date.strftime('%Y-%m-%d'), cost))
         # self._maintenance_logs.append('%s|%s|%d\n' % (date.strftime('%Y-%m-%d'), message, duration))
 
-        with open('sampledata/maintenance_costs.csv', 'a') as outfile:
+        with open('maintenance/costs.csv', 'a') as outfile:
             outfile.write('%s,%d\n' % (date.strftime('%Y-%m-%d'), cost))
 
-        with open('sampledata/maintenance_logs.txt', 'a') as outfile:
+        with open('maintenance/%s_notes.txt' % date.strftime('%Y-%m-%d'), 'a') as outfile:
             outfile.write('%s|%s|%d\n' % (date.strftime('%Y-%m-%d'), message, duration))
