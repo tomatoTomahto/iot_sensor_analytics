@@ -316,20 +316,21 @@ sb.barplot(x="Importance (%)", y="Sensor",
            data=sensorImportancesPD,
            label="Total", color="b")
 
-# We can also graph the correlation matrix for the sensors
-measurements = rawMeasurements.groupBy('record_time')\
-  .pivot('sensor_name')\
-  .agg(F.avg('value'))
-measurements.show()
-sensorNameArray = measurements.columns
-sensorNameArray.remove('record_time')
-corr = measurements.select(sensorNameArray).toPandas().corr()
-mask = np.zeros_like(corr, dtype=np.bool)
-mask[np.triu_indices_from(mask)] = True
-
-cmap = sb.diverging_palette(220, 10, as_cmap=True)
-sb.heatmap(corr, mask=mask, xticklabels=sensorNameArray, yticklabels=sensorNameArray,
-            square=True, linewidths=.5, cbar_kws={"shrink": .5})
+# We can also graph the correlation matrix for the sensors - TODO
+#measurements = rawMeasurements.groupBy('record_time')\
+#  .pivot('sensor_name')\
+#  .agg(F.avg('value'))
+#measurements.show()
+#
+#sensorNameArray = measurements.columns
+#sensorNameArray.remove('record_time')
+#corr = measurements.select(sensorNameArray).toPandas().corr()
+#mask = np.zeros_like(corr, dtype=np.bool)
+#mask[np.triu_indices_from(mask)] = True
+#
+#cmap = sb.diverging_palette(220, 10, as_cmap=True)
+#sb.heatmap(corr, mask=mask, xticklabels=sensorNameArray, yticklabels=sensorNameArray,
+#            square=True, linewidths=.5, cbar_kws={"shrink": .5})
 
 # #### Model Saving/Loading
 # We can save models and pipelines for re-use later 
@@ -344,7 +345,7 @@ print("Test Error = %g" % (1.0 - accuracy))
 # #### Model Tuning
 # Spark has advanced model tuning capabilities as well. Let's improve our Random Forest
 # Classifier using the ML tuning api
-import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
+from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit
 
 # ParamGrids are grids of model tuning parameter values
 paramGrid = ParamGridBuilder()\
@@ -378,7 +379,7 @@ model.transform(testData)\
   .show()
 
 # That's it! We have successfully built a machine learning model that predicts with over
-# 95% accuracy whether maintenance needs to be done on our asset using sensor data.
+# 95% accuracy whether maintenance needs to be done on our asset using sensor data. 
   
 ## In[159]:
 #

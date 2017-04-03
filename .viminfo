@@ -8,8 +8,9 @@
 # hlsearch on (H) or off (h):
 ~h
 # Command Line History (newest to oldest):
-:wq
 :q
+:wq
+:w
 
 # Search String History (newest to oldest):
 
@@ -20,26 +21,65 @@
 # Input Line History (newest to oldest):
 
 # Registers:
+""1	LINE	0
+	
+"2	LINE	0
+	max_leakage_risk = 5
+"3	LINE	0
+	well_chemicals = oil,lng
+"4	LINE	0
+	well_types = onshore
+"5	LINE	0
+	max_well_depth = 7500
+"6	LINE	0
+	min_well_depth = 4700
+"7	LINE	0
+	max_lat = 60
+"8	LINE	0
+	min_lat = 53
+"9	LINE	0
+	max_long = 119
 
 # File marks:
-'0  12  25  ~/.gitignore
-'1  16  0  ~/config.ini
+'0  1  0  ~/impala/createTables.sql
+'1  7  0  ~/config.ini
+'2  12  25  ~/.gitignore
+'3  4  0  ~/config.ini
 
 # Jumplist (newest first):
+-'  1  0  ~/impala/createTables.sql
+-'  7  0  ~/config.ini
+-'  1  0  ~/config.ini
+-'  12  25  ~/.gitignore
+-'  1  0  ~/.gitignore
+-'  4  0  ~/config.ini
 -'  12  25  ~/.gitignore
 -'  1  0  ~/.gitignore
 -'  16  0  ~/config.ini
+-'  7  0  ~/config.ini
 -'  1  0  ~/config.ini
+-'  12  25  ~/.gitignore
+-'  1  0  ~/.gitignore
+-'  4  0  ~/config.ini
+-'  12  25  ~/.gitignore
+-'  1  0  ~/.gitignore
 -'  16  0  ~/config.ini
--'  1  0  ~/config.ini
 
 # History of marks within files (newest to oldest):
+
+> ~/impala/createTables.sql
+	"	1	0
+
+> ~/config.ini
+	"	7	0
+	.	1	0
+	+	3	24
+	+	9	45
+	+	10	0
+	+	1	0
 
 > ~/.gitignore
 	"	12	25
 	^	12	26
 	.	12	25
 	+	12	25
-
-> ~/config.ini
-	"	16	0
