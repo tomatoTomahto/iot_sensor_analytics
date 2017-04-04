@@ -1,3 +1,5 @@
+from IPython.display import Image
+
 # # Spark Streaming Demo
 # ## Overview of Spark Streaming
 # Spark Streaming is an extension of the core Spark API that enables scalable, 
@@ -7,6 +9,9 @@
 # reduce, join, window and SparkSQL APIs. Finally, processed data can be pushed out to 
 # filesystems, databases, and live dashboards. In fact, you can apply Spark’s machine 
 # learning and graph processing algorithms on data streams.
+Image('img/streaming-arch.png')
+Image('img/streaming-flow.png')
+Image('img/streaming-dstream-window.png')
 # ## Overview of Streaming Demo
 # This demo continues on the data processing from SensorAnalytics_kudu.py. Once we have
 # a predictive model, we can score sensor data in real-time using Spark Streaming.
@@ -18,6 +23,7 @@ from pyspark.streaming.kafka import KafkaUtils
 import ConfigParser
 from pyspark.sql.types import DateType, StringType, FloatType, StructField, StructType, IntegerType
 from pyspark.sql import functions as F
+from pyspark.ml.classification import RandomForestClassificationModel
 
 # SparkSession singleton generator needed to operate on Dataframes within stream
 def getSparkSessionInstance(sparkConf):
@@ -64,7 +70,7 @@ def process(time, rdd):
       if rawSensor.count() == 0:
         print('No data, sleep until next window')
         return
-      
+
       print('Raw Sensor Data:')
       rawSensor.show(5)
 
@@ -84,7 +90,7 @@ def process(time, rdd):
       print('Transformed Sensor Data:')
       transformedSensor.show(5, truncate=False)
       
-      # Write data to Kudu
+      # Write transformed data to Kudu
       transformedSensor.write.format('org.apache.kudu.spark.kudu')\
         .option("kudu.master", kuduMaster)\
         .option("kudu.table", "measurements")\

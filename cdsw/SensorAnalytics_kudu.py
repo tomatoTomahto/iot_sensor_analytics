@@ -1,3 +1,5 @@
+from IPython.display import Image
+
 # # Sensor Analytics Demo
 # ### Samir Gupta - April 4, 2017
 # ## Overview
@@ -15,6 +17,7 @@
 # * Images and videos of the assets in production
 # * Sensor data from field assets, Scada systems, Historians, and other sources
 # * External data sources including weather and traffic data
+
 # Existing technologies have many challenges in ingesting, processing, and exposing
 # this data. These data sources can be extremely large both in volume and variety,
 # and current relational database systems (RDBMS) are not capable of scalably,
@@ -26,30 +29,31 @@
 # * build accurate predictive models 
 # There is also a requirement from the IT organization to secure this data using the
 # latest authentication, encryption and access control frameworks. 
+
 # ### The Solution
 # More and more companies are looking to the latest big data technologies to solve these
 # challenges. Hadoop-based solutions offer organizations the ability to store, process
 # and analyze unlimited amounts of data using a scalable architecture, any kind of data 
 # (structured or un-structured) using flexible storage formats, and perform large-scale
 # visual and predictive analytics on that data using community-driven analytics frameworks.
+Image(filename="img/cloudera.png")
 # The Cloudera Enterprise Data Hub is a platform built on open-source technology that 
 # provides all the benefits outlined above with the added capabilities of enterprise
 # grade security, management, and data analytics tooling that organizations require. 
-# ### The Demo
-# This demo, built with Cloudera's Data Science Workbench, walks through the process
-# of analyzing some of the data sources described above, and building a machine learning
-# model to predict planned and unplanned maintenance outages. 
-# The following data sources will be used:
-# * Maintenance logs with engineer notes for every maintenance activity that was done on the asset
-# * Sensor readings from every sensor on the asset
+# The architecture below illustrates how easy a use case like predictive maintenance is
+# using the Cloudera technology stack. 
+Image(filename="img/architecture.png")
+
 # ### The Frameworks
 # #### Apache Spark
+Image(filename="img/spark.png")
 # Apache Spark is a fast and general engine for large-scale data processing that enables:
 # * Fast Analytics - Spark runs programs up to 100x faster than Hadoop MapReduce in memory, or 10x faster on disk.
 # * Easy Data Science - With APIs in Java, Scala, Python, and R, it's easy to build parallel apps.
 # * General Processing - Spark's libraries enable SQL and DataFrames, machine learning, graph processing, and stream processing.
 
 # #### Apache Impala
+Image(filename='img/impala.png')
 # Apache Impala is the open source, native analytic database for Apache Hadoop. Impala 
 # is shipped by Cloudera, MapR, Oracle, and Amazon and enables:
 # * BI-style Queries on Hadoop - low latency and high concurrency for BI/analytic queries on Hadoop
@@ -57,18 +61,27 @@
 # * Huge BI Tool Ecosystem - all leading BI, visualization and analytics tools integrate with Impala
 
 # #### Apache Kudu
+Image(filename='img/kudu.png')
 # Apache Kudu is a scalable storage engine capable of ingesting and updating real-time data while
 # enabling large-scale machine learning and deep analytics on that data. It's capabilities include:
 # * Streamlined Architecture - fast inserts/updates and efficient columnar scans to enable multiple real-time analytic workloads across a single storage layer. 
 # * Faster Analytics - specifically designed for analytics on rapidly changing data. Kudu lowers query latency significantly for Apache Impala and Apache Spark 
 
-# # Demo
+# ### The Demo
+# This demo, built with Cloudera's Data Science Workbench, walks through the process
+# of analyzing some of the data sources described above, and building a machine learning
+# model to predict planned and unplanned maintenance outages. 
+# The following data sources will be used:
+# * Maintenance logs with engineer notes for every maintenance activity that was done on the asset
+# * Sensor readings from every sensor on the asset
+
+# # Demo Start
 # ## Setup Tasks
 # * Install Python packages used by the demo
 !conda install -y ConfigParser
 
 # ## Initialization
-# Spark Library Imports
+# ### Spark Library Imports
 from pyspark.sql import SparkSession
 from pyspark.sql import SQLContext
 from pyspark.sql.types import DateType, StringType, FloatType, StructField, StructType, IntegerType
@@ -76,7 +89,7 @@ from pyspark.sql import functions as F
 from pyspark.ml.feature import Tokenizer, StopWordsRemover, NGram, CountVectorizer
 from pyspark.ml.clustering import LDA
 
-# Other Python Library Imports
+# ### Other Python Library Imports
 get_ipython().magic(u'matplotlib inline')
 import matplotlib.pyplot as plt
 import seaborn as sb
@@ -84,7 +97,7 @@ import numpy as np
 import pandas as pd
 import ConfigParser
 
-# Read in Kudu information
+# ### Read in Kudu information
 config = ConfigParser.ConfigParser()
 config.read('config.ini')
 kuduMaster = config.get('hadoop','kudu_masters')
@@ -105,7 +118,10 @@ maintCosts = spark.createDataFrame(rawMaintCosts, schema)
 maintCosts = maintCosts.select(maintCosts.date.cast('date'), maintCosts.cost.cast('int'))
 maintCostsPD = maintCosts.toPandas()
 maintCostsPD.describe()
-sb.distplot(maintCostsPD['cost'], bins=100, hist=False, kde_kws={"shade": True}).set(xlim=(0, max(maintCostsPD['cost'])))
+maintCosts.groupBy(F.date_format('date','yyyyMM').alias('month'))\
+  .agg(F.avg('cost').alias('cost'))\
+  .orderBy('month').toPandas().plot(kind='line', x='month', y='cost', title='Monthly Maintenance Costs')
+sb.distplot(maintCostsPD['cost'], bins=100, hist=True, kde_kws={"shade": True}).set(xlim=(0, max(maintCostsPD['cost'])))
 
 # ## Text Analytics of Maintenance Logs
 # Spark provides rich text analytics capabilities including nGram extraction, TF-IDF, 
@@ -121,16 +137,16 @@ maintenance = spark.read.format("com.databricks.spark.csv").option("delimiter", 
   .select(F.col('date').cast('date'), 'note', F.col('duration').cast('int'))
 maintenance.show(5, truncate=False)
 
-# ### Sample of 3-word nGrams on Maintenance Notes
+# ### Sample of 2-word nGrams on Maintenance Notes
 tk = Tokenizer(inputCol="note", outputCol="words") # Tokenize
 maintTokenized = tk.transform(maintenance)
 swr = StopWordsRemover(inputCol="words", outputCol="filtered") # Remove stop-words
 maintFiltered = swr.transform(maintTokenized)
-ngram = NGram(n=2, inputCol="filtered", outputCol="ngrams") # 3-word nGrams
+ngram = NGram(n=2, inputCol="filtered", outputCol="ngrams") # 2-word nGrams
 maintNGrams = ngram.transform(maintFiltered)
 maintNGrams.select('ngrams').show(5, truncate=False)
 
-# ### Topic Clustering using Latent Dirichlet allocation (LDA)
+# ### Topic Clustering using Latent Dirichlet Allocation (LDA)
 # LDA is a form of un-supervised machine learning that identifies clusters, or topics,
 # in the data
 cv = CountVectorizer(inputCol="ngrams", outputCol="features", vocabSize=50)\
@@ -139,6 +155,9 @@ maintVectors = cv.transform(maintNGrams)
 vocabArray = cv.vocabulary
 lda = LDA(k=3, maxIter=10)
 ldaModel = lda.fit(maintVectors)
+
+ldaModel.write().overwrite().save('lda.mdl')
+
 topics = ldaModel.describeTopics(5)
 # We see below that each maintenance log can be clustered based on its text into 
 # 1 of 3 topics below. The nGrams in each cluster show clearly 3 types of maintenance
@@ -209,13 +228,13 @@ ax = sb.boxplot(x="value", y="sensor_name",
                 whis=np.inf, color="c")
 sb.despine(trim=True)
 
-sb.set(style="whitegrid", palette="muted")
-maintSensorDailyPD = maintTypes.filter('year(date)>=2016')\
-  .select(maintTypes.date.alias('day'), 'maintenanceType')\
-  .join(dailyRawMeasurements, 'day')\
-  .select('maintenanceType', 'sensor_name', 'value')\
-  .toPandas()
-sb.swarmplot(y='sensor_name', x='value', hue='maintenanceType', data=maintSensorDailyPD)
+#sb.set(style="whitegrid", palette="muted")
+#maintSensorDailyPD = maintTypes.filter('year(date)>=2016')\
+#  .select(maintTypes.date.alias('day'), 'maintenanceType')\
+#  .join(dailyRawMeasurements, 'day')\
+#  .select('maintenanceType', 'sensor_name', 'value')\
+#  .toPandas()
+#sb.swarmplot(y='sensor_name', x='value', hue='maintenanceType', data=maintSensorDailyPD)
 
 # Let's plot the maintenance type against sensor readings right before we have an outage
 progPrevMaint = maintTypes.filter('maintenanceType!="Corrective"')\
@@ -255,6 +274,7 @@ sb.swarmplot(y='sensor_name', x='value', hue='maintenanceType',
 # in order to reduce the risk of model overfitting. The spark.ml implementation 
 # supports random forests for binary and multiclass classification and for regression, 
 # using both continuous and categorical features.
+Image(filename="img/decision_tree.png")
 # First let's import the Spark ML libraries
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import RandomForestClassifier, RandomForestClassificationModel
@@ -393,10 +413,11 @@ sb.barplot(x="Importance (%)", y="Sensor",
 # #### Model Saving/Loading
 # We can save models and pipelines for re-use later 
 model.bestModel.write().overwrite().save(path='rf_sensor_maintenance.mdl')
+!rm -rf rf_sensor_maintenance.mdl
 !hdfs dfs -get rf_sensor_maintenance.mdl
 
 newModel = RandomForestClassificationModel.load('rf_sensor_maintenance.mdl')
-predictions = newModel.transform(testData)
+predictions = newModel.transform(li.transform(va))
 accuracy = evaluator.evaluate(predictions)
 print("Test Error = %g" % (1.0 - accuracy))
 
