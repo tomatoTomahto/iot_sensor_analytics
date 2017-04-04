@@ -443,7 +443,9 @@ costSavings = predictedMaintenance.select('date', 'cost', predictedCost('mainten
   .groupBy(F.date_format('date','yyyyMM').alias('month'))\
   .agg(F.sum('cost').alias('actualCost'), F.sum('predictedCost').alias('predictedCost'), F.sum('costSavings').alias('predictedSavings'))
   
-costSavings.toPandas().plot(kind='line', x='month')
+csPD = costSavings.select('month',F.round('actualCost'),F.round('predictedCost')).toPandas()
+csPD.plot(kind='line', x='month')
+csPD.describe()
 
 print('Total Cost Savings Using This Model')
 costSavings.agg(F.sum('actualCost').alias('TotalCost'), 
