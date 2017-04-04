@@ -414,7 +414,7 @@ sb.barplot(x="Importance (%)", y="Sensor",
 # We can save models and pipelines for re-use later 
 model.bestModel.write().overwrite().save(path='rf_sensor_maintenance.mdl')
 !rm -rf rf_sensor_maintenance.mdl
-!hdfs dfs -get rf_sensor_maintenance.mdl
+!hdfs dfs -get models/rf_sensor_maintenance.mdl
 
 newModel = RandomForestClassificationModel.load('rf_sensor_maintenance.mdl')
 predictions = newModel.transform(li.transform(va))

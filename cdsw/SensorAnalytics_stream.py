@@ -1,6 +1,13 @@
 from IPython.display import Image
 
 # # Spark Streaming Demo
+# ## Real-time Ingest of Sensor Data into Cloudera
+# The diagram below illustrates the ways in which we can ingest sensor data into Cloudera
+# A common method to pull data out of either historians (ex OSI PI, Honeywell PHD) is to 
+# build an OPC UA connector. Cloudera has partnered with 3rd party OPC companies such as
+# Inmation and Microsoft. These solutions provide fault-tolerant platforms that can navigate
+# the firewalls and topologies of complex control system networks. 
+Image('img/ingest.png')
 # ## Overview of Spark Streaming
 # Spark Streaming is an extension of the core Spark API that enables scalable, 
 # high-throughput, fault-tolerant stream processing of live data streams. Data can be 
@@ -14,7 +21,9 @@ Image('img/streaming-flow.png')
 Image('img/streaming-dstream-window.png')
 # ## Overview of Streaming Demo
 # This demo continues on the data processing from SensorAnalytics_kudu.py. Once we have
-# a predictive model, we can score sensor data in real-time using Spark Streaming.
+# a predictive model, we can run transformations on the data and even score it in real-time
+# using Spark Streaming. After transformations, the data can be streamed into Kudu and be 
+# queried instantly. 
 
 # Spark Library Imports
 from pyspark.sql import SparkSession, Row, SQLContext
