@@ -119,7 +119,7 @@ maintCosts = maintCosts.select(maintCosts.date.cast('date'), maintCosts.cost.cas
 maintCostsPD = maintCosts.toPandas()
 maintCostsPD.describe()
 maintCosts.groupBy(F.date_format('date','yyyyMM').alias('month'))\
-  .agg(F.avg('cost').alias('cost'))\
+  .agg(F.round(F.sum('cost')).alias('cost'))\
   .orderBy('month').toPandas().plot(kind='line', x='month', y='cost', title='Monthly Maintenance Costs')
 sb.distplot(maintCostsPD['cost'], bins=100, hist=True, kde_kws={"shade": True}).set(xlim=(0, max(maintCostsPD['cost'])))
 
@@ -421,5 +421,39 @@ predictions = newModel.transform(li.transform(va))
 accuracy = evaluator.evaluate(predictions)
 print("Test Error = %g" % (1.0 - accuracy))
 
+# Let's see how much maintenance we could have saved if we used this model
+def f(actual, predicted, cost):
+    if actual==predicted:
+        if actual=='Healthy':
+          return 0
+        elif actual=='Preventive':
+          return cost
+        elif actual=='Corrective':
+          return 30000
+    else:
+        return cost
+    
+predictedCost = F.udf(f, IntegerType())
+predictedMaintenance = i2s.transform(predictions)\
+  .select('date', 'maintenanceType','predictedLabel')\
+  .join(maintCosts, 'date')
+
+costSavings = predictedMaintenance.select('date', 'cost', predictedCost('maintenanceType','predictedLabel','cost').alias('predictedCost'))\
+  .withColumn('costSavings', F.col('cost')-F.col('predictedCost'))\
+  .groupBy(F.date_format('date','yyyyMM').alias('month'))\
+  .agg(F.sum('cost').alias('actualCost'), F.sum('predictedCost').alias('predictedCost'), F.sum('costSavings').alias('predictedSavings'))
+  
+costSavings.toPandas().plot(kind='line', x='month')
+
+print('Total Cost Savings Using This Model')
+costSavings.agg(F.sum('actualCost').alias('TotalCost'), 
+                F.sum('predictedSavings').alias('TotalSavings($)'))\
+  .withColumn('TotalSavings(%)', F.col('TotalSavings($)')/F.col('TotalCost')*100)\
+  .select('TotalSavings($)', 'TotalSavings(%)')\
+  .toPandas()
+
+maintTypes = ldaModel.transform(maintVectors)\
+  .select('date',findCluster('topicDistribution').alias('maintenanceType'), 'duration')
+  
 # That's it! We have successfully built a machine learning model that predicts with over
 # 95% accuracy whether maintenance needs to be done on our asset using sensor data. 
