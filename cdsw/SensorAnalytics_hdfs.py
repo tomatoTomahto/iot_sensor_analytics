@@ -1,3 +1,5 @@
+from IPython.display import Image
+
 # # Sensor Analytics Demo
 # ### Samir Gupta - April 4, 2017
 # ## Overview
@@ -15,6 +17,7 @@
 # * Images and videos of the assets in production
 # * Sensor data from field assets, Scada systems, Historians, and other sources
 # * External data sources including weather and traffic data
+
 # Existing technologies have many challenges in ingesting, processing, and exposing
 # this data. These data sources can be extremely large both in volume and variety,
 # and current relational database systems (RDBMS) are not capable of scalably,
@@ -26,30 +29,31 @@
 # * build accurate predictive models 
 # There is also a requirement from the IT organization to secure this data using the
 # latest authentication, encryption and access control frameworks. 
+
 # ### The Solution
 # More and more companies are looking to the latest big data technologies to solve these
 # challenges. Hadoop-based solutions offer organizations the ability to store, process
 # and analyze unlimited amounts of data using a scalable architecture, any kind of data 
 # (structured or un-structured) using flexible storage formats, and perform large-scale
 # visual and predictive analytics on that data using community-driven analytics frameworks.
+Image(filename="img/cloudera.png")
 # The Cloudera Enterprise Data Hub is a platform built on open-source technology that 
 # provides all the benefits outlined above with the added capabilities of enterprise
 # grade security, management, and data analytics tooling that organizations require. 
-# ### The Demo
-# This demo, built with Cloudera's Data Science Workbench, walks through the process
-# of analyzing some of the data sources described above, and building a machine learning
-# model to predict planned and unplanned maintenance outages. 
-# The following data sources will be used:
-# * Maintenance logs with engineer notes for every maintenance activity that was done on the asset
-# * Sensor readings from every sensor on the asset
+# The architecture below illustrates how easy a use case like predictive maintenance is
+# using the Cloudera technology stack. 
+Image(filename="img/architecture.png")
+
 # ### The Frameworks
 # #### Apache Spark
+Image(filename="img/spark.png")
 # Apache Spark is a fast and general engine for large-scale data processing that enables:
 # * Fast Analytics - Spark runs programs up to 100x faster than Hadoop MapReduce in memory, or 10x faster on disk.
 # * Easy Data Science - With APIs in Java, Scala, Python, and R, it's easy to build parallel apps.
 # * General Processing - Spark's libraries enable SQL and DataFrames, machine learning, graph processing, and stream processing.
 
 # #### Apache Impala
+Image(filename='img/impala.png')
 # Apache Impala is the open source, native analytic database for Apache Hadoop. Impala 
 # is shipped by Cloudera, MapR, Oracle, and Amazon and enables:
 # * BI-style Queries on Hadoop - low latency and high concurrency for BI/analytic queries on Hadoop
@@ -57,51 +61,63 @@
 # * Huge BI Tool Ecosystem - all leading BI, visualization and analytics tools integrate with Impala
 
 # #### Apache Kudu
+Image(filename='img/kudu.png')
 # Apache Kudu is a scalable storage engine capable of ingesting and updating real-time data while
 # enabling large-scale machine learning and deep analytics on that data. It's capabilities include:
 # * Streamlined Architecture - fast inserts/updates and efficient columnar scans to enable multiple real-time analytic workloads across a single storage layer. 
 # * Faster Analytics - specifically designed for analytics on rapidly changing data. Kudu lowers query latency significantly for Apache Impala and Apache Spark 
 
-# # Demo
+# ### The Demo
+# This demo, built with Cloudera's Data Science Workbench, walks through the process
+# of analyzing some of the data sources described above, and building a machine learning
+# model to predict planned and unplanned maintenance outages. 
+# The following data sources will be used:
+# * Maintenance logs with engineer notes for every maintenance activity that was done on the asset
+# * Sensor readings from every sensor on the asset
+
+# # Demo Start
 # ## Setup Tasks
 # * Install Python packages used by the demo
-# * Copy the data into HDFS
-!conda install -y configparser
-!conda install -y kafka
-!hdfs dfs -rm -r sampledata
-!hdfs dfs -mkdir sampledata
-!hdfs dfs -put sampledata/* sampledata/
+!conda install -y ConfigParser
+!hdfs dfs -rm -r -f sampledata
+!hdfs dfs -put sampledata
 
 # ## Initialization
-# Spark Library Imports
+# ### Spark Library Imports
 from pyspark.sql import SparkSession
+from pyspark.sql import SQLContext
 from pyspark.sql.types import DateType, StringType, FloatType, StructField, StructType, IntegerType
 from pyspark.sql import functions as F
 from pyspark.ml.feature import Tokenizer, StopWordsRemover, NGram, CountVectorizer
 from pyspark.ml.clustering import LDA
 
-# Other Python Library Imports
+# ### Other Python Library Imports
 get_ipython().magic(u'matplotlib inline')
 import matplotlib.pyplot as plt
 import seaborn as sb
 import numpy as np
 import pandas as pd
+import ConfigParser
 
 # ### Create a Spark Session
 spark = SparkSession.builder.appName("Sensor Analytics").getOrCreate()
 sc = spark.sparkContext
+sqc = SQLContext(sc)
 
 # ## Analyze Maintenance Costs
 # We start our analysis with visualizing the distribution of maintenance costs
 # ### Histogram of Maintenance Costs
-rawMaintCosts = sc.textFile("sampledata/maintenance_costs.csv").map(lambda l: l.split(","))    
+rawMaintCosts = sc.textFile("sampledata/maint_costs.csv").map(lambda l: l.split(","))    
 schemaString = "date cost"
 schema = StructType([StructField(field_name, StringType(), True) for field_name in ['date','cost']])
 maintCosts = spark.createDataFrame(rawMaintCosts, schema)
 maintCosts = maintCosts.select(maintCosts.date.cast('date'), maintCosts.cost.cast('int'))
 maintCostsPD = maintCosts.toPandas()
 maintCostsPD.describe()
-sb.distplot(maintCostsPD['cost'], bins=100, hist=False, kde_kws={"shade": True}).set(xlim=(0, max(maintCostsPD['cost'])))
+maintCosts.groupBy(F.date_format('date','yyyyMM').alias('month'))\
+  .agg(F.round(F.sum('cost')).alias('cost'))\
+  .orderBy('month').toPandas().plot(kind='line', x='month', y='cost', title='Monthly Maintenance Costs')
+sb.distplot(maintCostsPD['cost'], bins=100, hist=True, kde_kws={"shade": True}).set(xlim=(0, max(maintCostsPD['cost'])))
 
 # ## Text Analytics of Maintenance Logs
 # Spark provides rich text analytics capabilities including nGram extraction, TF-IDF, 
@@ -109,7 +125,7 @@ sb.distplot(maintCostsPD['cost'], bins=100, hist=False, kde_kws={"shade": True})
 # models based on textual data. 
 # ### Sample of Maintenance Logs
 maintenance = spark.read.format("com.databricks.spark.csv").option("delimiter", "|")\
-  .load("sampledata/maintenance_logs.csv")\
+  .load("sampledata/maint_notes.txt")\
   .withColumnRenamed('_c0','date')\
   .withColumnRenamed('_c1','note')\
   .withColumnRenamed('_c2','duration')\
@@ -117,16 +133,16 @@ maintenance = spark.read.format("com.databricks.spark.csv").option("delimiter", 
   .select(F.col('date').cast('date'), 'note', F.col('duration').cast('int'))
 maintenance.show(5, truncate=False)
 
-# ### Sample of 3-word nGrams on Maintenance Notes
+# ### Sample of 2-word nGrams on Maintenance Notes
 tk = Tokenizer(inputCol="note", outputCol="words") # Tokenize
 maintTokenized = tk.transform(maintenance)
 swr = StopWordsRemover(inputCol="words", outputCol="filtered") # Remove stop-words
 maintFiltered = swr.transform(maintTokenized)
-ngram = NGram(n=3, inputCol="filtered", outputCol="ngrams") # 3-word nGrams
+ngram = NGram(n=2, inputCol="filtered", outputCol="ngrams") # 2-word nGrams
 maintNGrams = ngram.transform(maintFiltered)
 maintNGrams.select('ngrams').show(5, truncate=False)
 
-# ### Topic Clustering using Latent Dirichlet allocation (LDA)
+# ### Topic Clustering using Latent Dirichlet Allocation (LDA)
 # LDA is a form of un-supervised machine learning that identifies clusters, or topics,
 # in the data
 cv = CountVectorizer(inputCol="ngrams", outputCol="features", vocabSize=50)\
@@ -135,6 +151,9 @@ maintVectors = cv.transform(maintNGrams)
 vocabArray = cv.vocabulary
 lda = LDA(k=3, maxIter=10)
 ldaModel = lda.fit(maintVectors)
+
+ldaModel.write().overwrite().save('lda.mdl')
+
 topics = ldaModel.describeTopics(5)
 # We see below that each maintenance log can be clustered based on its text into 
 # 1 of 3 topics below. The nGrams in each cluster show clearly 3 types of maintenance
@@ -147,8 +166,8 @@ for topic in topics.collect():
     for termIndex in topic[1]:
         print('  %s' % vocabArray[termIndex])
 
-topic_1 = 'Preventive'
-topic_2 = 'Corrective'
+topic_1 = 'Corrective'
+topic_2 = 'Preventive'
 topic_3 = 'Healthy'
       
 # ### Apply Maintenance Clusters (Types) to Maintenance Costs
@@ -187,6 +206,8 @@ tagIDs = spark.read.json("sampledata/tag_mappings.json")
 rawMeasurements = spark.read.json("sampledata/raw_measurements.json")\
   .join(tagIDs, 'tag_id')\
   .select(F.col('record_time').cast('timestamp'), 'sensor_name', 'value', 'tag_id')
+rawMeasurements.show()
+rawMeasurements.cache()
 
 dailyRawMeasurements = rawMeasurements.groupBy(F.to_date('record_time').alias('day'), 'sensor_name', 'tag_id')\
   .agg(F.avg('value').alias('value'))\
@@ -198,13 +219,13 @@ ax = sb.boxplot(x="value", y="sensor_name",
                 whis=np.inf, color="c")
 sb.despine(trim=True)
 
-sb.set(style="whitegrid", palette="muted")
-maintSensorDailyPD = maintTypes.filter('year(date)>=2016')\
-  .select(maintTypes.date.alias('day'), 'maintenanceType')\
-  .join(dailyRawMeasurements, 'day')\
-  .select('maintenanceType', 'sensor_name', 'value')\
-  .toPandas()
-sb.swarmplot(y='sensor_name', x='value', hue='maintenanceType', data=maintSensorDailyPD)
+#sb.set(style="whitegrid", palette="muted")
+#maintSensorDailyPD = maintTypes.filter('year(date)>=2016')\
+#  .select(maintTypes.date.alias('day'), 'maintenanceType')\
+#  .join(dailyRawMeasurements, 'day')\
+#  .select('maintenanceType', 'sensor_name', 'value')\
+#  .toPandas()
+#sb.swarmplot(y='sensor_name', x='value', hue='maintenanceType', data=maintSensorDailyPD)
 
 # Let's plot the maintenance type against sensor readings right before we have an outage
 progPrevMaint = maintTypes.filter('maintenanceType!="Corrective"')\
@@ -217,7 +238,7 @@ corrMaint = maintTypes.filter('maintenanceType=="Corrective"')\
   .join(dailyRawMeasurements, maintTypes.date==F.date_add(dailyRawMeasurements.day, 1))    .select('date', 'maintenanceType', 'tag_id', 'value', 'sensor_name')
 
 rawSensorsByMaint = progPrevMaint.union(corrMaint)
-print(rawSensorsByMaint.count())
+
 sb.swarmplot(y='sensor_name', x='value', hue='maintenanceType', 
              data=rawSensorsByMaint.filter('year(date)>=2016').select('sensor_name', 'value', 'maintenanceType').toPandas())
 
@@ -244,9 +265,10 @@ sb.swarmplot(y='sensor_name', x='value', hue='maintenanceType',
 # in order to reduce the risk of model overfitting. The spark.ml implementation 
 # supports random forests for binary and multiclass classification and for regression, 
 # using both continuous and categorical features.
+Image(filename="img/decision_tree.png")
 # First let's import the Spark ML libraries
 from pyspark.ml import Pipeline
-from pyspark.ml.classification import RandomForestClassifier
+from pyspark.ml.classification import RandomForestClassifier, RandomForestClassificationModel
 from pyspark.ml.feature import IndexToString, StringIndexer, VectorIndexer, VectorAssembler
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 from pyspark.ml.linalg import Vectors
@@ -262,7 +284,7 @@ modelData = rawSensorsByMaint.groupBy('date','maintenanceType')\
   .agg(F.avg(F.round('value')))
 modelData.persist()
 modelData.select('date', 'Sensor_5').show()
-modelData.select('Sensor_5', 'Sensor_10').describe().show()
+modelData.select('Sensor_5', 'Sensor_7').describe().show()
 
 # Now we need to convert our feature columns (sensor names) into a vector for each row
 va = VectorAssembler(inputCols=sensorNames, outputCol="features")\
@@ -317,30 +339,20 @@ sb.barplot(x="Importance (%)", y="Sensor",
            label="Total", color="b")
 
 # We can also graph the correlation matrix for the sensors - TODO
-#measurements = rawMeasurements.groupBy('record_time')\
-#  .pivot('sensor_name')\
-#  .agg(F.avg('value'))
-#measurements.show()
-#
-#sensorNameArray = measurements.columns
-#sensorNameArray.remove('record_time')
-#corr = measurements.select(sensorNameArray).toPandas().corr()
-#mask = np.zeros_like(corr, dtype=np.bool)
-#mask[np.triu_indices_from(mask)] = True
-#
-#cmap = sb.diverging_palette(220, 10, as_cmap=True)
-#sb.heatmap(corr, mask=mask, xticklabels=sensorNameArray, yticklabels=sensorNameArray,
-#            square=True, linewidths=.5, cbar_kws={"shrink": .5})
+meas = rawMeasurements.filter(F.year('record_time')>2016)\
+  .groupBy('record_time')\
+  .pivot('sensor_name')\
+  .agg(F.avg('value'))
 
-# #### Model Saving/Loading
-# We can save models and pipelines for re-use later 
-model.write().overwrite().save(path='rf_sensor_maintenance.mdl')
-!hdfs dfs -get rf_sensor_maintenance.mdl
+sensorNameArray = meas.columns
+sensorNameArray.remove('record_time')
+corr = meas.select(sensorNameArray).toPandas().corr()
+mask = np.zeros_like(corr, dtype=np.bool)
+mask[np.triu_indices_from(mask)] = True
 
-newModel = RandomForestClassifier.load('rf_sensor_maintenance.mdl')
-predictions = newModel.transform(testData)
-accuracy = evaluator.evaluate(predictions)
-print("Test Error = %g" % (1.0 - accuracy))
+cmap = sb.diverging_palette(220, 10, as_cmap=True)
+sb.heatmap(corr, mask=mask, xticklabels=sensorNameArray, yticklabels=sensorNameArray,
+            square=True, linewidths=.5, cbar_kws={"shrink": .5})
 
 # #### Model Tuning
 # Spark has advanced model tuning capabilities as well. Let's improve our Random Forest
@@ -372,118 +384,69 @@ evaluator = MulticlassClassificationEvaluator(
 accuracy = evaluator.evaluate(predictions)
 print("Test Error = %g" % (1.0 - accuracy))
 
-# Make predictions on test data. model is the model with combination of parameters
-# that performed best.
-model.transform(testData)\
-  .select("features", "label", "prediction")\
-  .show()
+i2s.transform(predictions).groupBy('predictedLabel', 'maintenanceType')\
+    .count().toPandas()
+  
+fi = model.bestModel.featureImportances.toArray()
 
+sensorImportances = {}
+for sensorIndex in range(len(fi)):
+    sensorImportances[sensorNames[sensorIndex]] = round(fi[sensorIndex]*100)
+    
+sensorImportancesPD = pd.DataFrame(sensorImportances.items(), columns=['Sensor','Importance (%)'])\
+  .sort_values('Importance (%)')
+    
+sb.set_color_codes("pastel")
+sb.barplot(x="Importance (%)", y="Sensor", 
+           data=sensorImportancesPD,
+           label="Total", color="b")
+
+# #### Model Saving/Loading
+# We can save models and pipelines for re-use later 
+model.bestModel.write().overwrite().save(path='rf_sensor_maintenance.mdl')
+!rm -rf rf_sensor_maintenance.mdl
+!hdfs dfs -get models/rf_sensor_maintenance.mdl
+
+newModel = RandomForestClassificationModel.load('rf_sensor_maintenance.mdl')
+predictions = newModel.transform(li.transform(va))
+accuracy = evaluator.evaluate(predictions)
+print("Test Error = %g" % (1.0 - accuracy))
+
+# Let's see how much maintenance we could have saved if we used this model
+def f(actual, predicted, cost):
+    if actual==predicted:
+        if actual=='Corrective':
+          return 0
+        elif actual=='Preventive':
+          return cost
+        elif actual=='Healthy':
+          return 30000
+    else:
+        return cost
+    
+predictedCost = F.udf(f, IntegerType())
+predictedMaintenance = i2s.transform(predictions)\
+  .select('date', 'maintenanceType','predictedLabel')\
+  .join(maintCosts, 'date')
+
+costSavings = predictedMaintenance.select('date', 'cost', predictedCost('maintenanceType','predictedLabel','cost').alias('predictedCost'))\
+  .withColumn('costSavings', F.col('cost')-F.col('predictedCost'))\
+  .groupBy(F.date_format('date','yyyyMM').alias('month'))\
+  .agg(F.sum('cost').alias('actualCost'), F.sum('predictedCost').alias('predictedCost'), F.sum('costSavings').alias('predictedSavings'))
+  
+csPD = costSavings.select('month',F.round('actualCost'),F.round('predictedCost')).toPandas()
+csPD.plot(kind='line', x='month')
+csPD.describe()
+
+print('Total Cost Savings Using This Model')
+costSavings.agg(F.sum('actualCost').alias('TotalCost'), 
+                F.sum('predictedSavings').alias('TotalSavings($)'))\
+  .withColumn('TotalSavings(%)', F.col('TotalSavings($)')/F.col('TotalCost')*100)\
+  .select('TotalSavings($)', 'TotalSavings(%)')\
+  .toPandas()
+
+maintTypes = ldaModel.transform(maintVectors)\
+  .select('date',findCluster('topicDistribution').alias('maintenanceType'), 'duration')
+  
 # That's it! We have successfully built a machine learning model that predicts with over
 # 95% accuracy whether maintenance needs to be done on our asset using sensor data. 
-  
-## In[159]:
-#
-#from pyspark.ml import Pipeline
-#from pyspark.ml.regression import RandomForestRegressor
-#from pyspark.ml.feature import VectorIndexer
-#from pyspark.ml.evaluation import RegressionEvaluator
-#import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
-#
-#modelData = rawMeasurements.filter('value!=0').groupBy('record_time')    .pivot('sensor_name')    .agg(F.avg('value'))    .dropna()    .withColumnRenamed('Sensor_17','label')
-#sensorNames = modelData.columns
-#sensorNames.remove('record_time')
-#sensorNames.remove('label')
-#
-## Convert feature columns (sensor names) into vectors
-#va = VectorAssembler(inputCols=sensorNames, outputCol="features")    .transform(modelData)
-#    
-## Split the data into training and test sets (30% held out for testing)
-#(trainingData, testData) = va.randomSplit([0.7, 0.3])
-#
-## Train a RandomForest model.
-#rf = RandomForestRegressor(featuresCol="features")
-#
-## Train model.  This also runs the indexer.
-#model = rf.fit(trainingData)
-#
-## Make predictions.
-#predictions = model.transform(testData)
-#
-## Select example rows to display.
-#predictions.select("prediction", "label", "features").show(5)
-#
-## Select (prediction, true label) and compute test error
-#evaluator = RegressionEvaluator(
-#    labelCol="label", predictionCol="prediction", metricName="rmse")
-#rmse = evaluator.evaluate(predictions)
-#print("Root Mean Squared Error (RMSE) on test data = %g" % rmse)
-#
-#print(model)  # summary only
-#
-#
-## In[161]:
-#
-#from pyspark.mllib.linalg import *
-#
-#fi = model.featureImportances.toArray()
-#
-#sensorImportances = {}
-#for sensorIndex in range(len(fi)):
-#    sensorImportances[sensorNames[sensorIndex]] = round(fi[sensorIndex]*100)
-#    
-#sensorImportancesPD = pd.DataFrame(sensorImportances.items(), columns=['Sensor','Importance (%)'])                           .sort_values('Importance (%)')
-#    
-#sb.set_color_codes("pastel")
-#sb.barplot(x="Importance (%)", y="Sensor", 
-#           data=sensorImportancesPD,
-#           label="Total", color="b")
-#
-#
-## In[ ]:
-#
-#
-#
-#
-## In[163]:
-#
-#from pyspark.ml.evaluation import RegressionEvaluator
-#from pyspark.ml.regression import LinearRegression
-#from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit
-#
-#modelData = rawMeasurements.filter('value!=0').groupBy('record_time')    .pivot('sensor_name')    .agg(F.avg('value'))    .dropna()    .withColumnRenamed('Sensor_17','label')
-#sensorNames = modelData.columns
-#sensorNames.remove('record_time')
-#sensorNames.remove('label')
-#
-## Convert feature columns (sensor names) into vectors
-#va = VectorAssembler(inputCols=sensorNames, outputCol="features")    .transform(modelData)    
-#
-## Split the data into training and test sets (30% held out for testing)
-#(trainingData, testData) = va.randomSplit([0.7, 0.3], seed=12345)
-#
-## Train a RandomForest model.
-#lr = LinearRegression(maxIter=10)
-#
-#paramGrid = ParamGridBuilder()    .addGrid(lr.regParam, [0.1, 0.01])     .addGrid(lr.fitIntercept, [False, True])    .addGrid(lr.elasticNetParam, [0.0, 0.5, 1.0])    .build()
-#
-## In this case the estimator is simply the linear regression.
-## A TrainValidationSplit requires an Estimator, a set of Estimator ParamMaps, and an Evaluator.
-#tvs = TrainValidationSplit(estimator=lr,
-#                           estimatorParamMaps=paramGrid,
-#                           evaluator=RegressionEvaluator(),
-#                           # 80% of the data will be used for training, 20% for validation.
-#                           trainRatio=0.8)
-#
-## Run TrainValidationSplit, and choose the best set of parameters.
-#model = tvs.fit(trainingData)
-#
-## Make predictions on test data. model is the model with combination of parameters
-## that performed best.
-#model.transform(testData)    .select("features", "label", "prediction")    .show()
-#
-#
-## In[ ]:
-#
-#
-#
-

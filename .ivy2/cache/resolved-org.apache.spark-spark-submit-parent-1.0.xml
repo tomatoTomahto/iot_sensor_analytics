@@ -4,7 +4,7 @@
 		module="spark-submit-parent"
 		revision="1.0"
 		status="release"
-		publication="20170404191634"
+		publication="20170405164056"
 		default="true"
 	/>
 	<configurations>

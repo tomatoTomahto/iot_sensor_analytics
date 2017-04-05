@@ -1,6 +1,4 @@
 import random, datetime, dateutil.relativedelta, time, json
-import kudu
-from kudu.client import Partitioning
 from kafka import KafkaProducer
 
 # DataGenerator will produce the following data
@@ -20,7 +18,7 @@ class DataGenerator():
     CORRECT_DUR = 24
 
     # Initialize generator by reading in all config values
-    def __init__(self, config):
+    def __init__(self, config, file):
         for section in ['sensor device data', 'hadoop']:
             if section not in config:
                 raise Exception('Error: missing [%s] config' % (section))
@@ -39,16 +37,20 @@ class DataGenerator():
         self._config['measurement_interval'] = int(config['sensor device data']['measurement_interval'])
 
         self._predicted_entity = 5
-        self._prediction_entities = [4,7,10,13,17]
+        self._prediction_entities = [2,4,6,8]
 
         print('Predicted Sensor: %d, Prediction Sensors: %s' % (self._predicted_entity, self._prediction_entities))
         self._measurements = []
         self._raw_measurements = []
         self._maintenance_costs = []
         self._maintenance_logs = []
-
-        self._connect_kafka()
-        self._connect_kudu()
+        
+        self._file = file
+        if not self._file:
+          import kudu
+          from kudu.client import Partitioning
+          self._connect_kafka()
+          self._connect_kudu()
 
     # Connect to Kafka
     def _connect_kafka(self):
@@ -99,30 +101,35 @@ class DataGenerator():
                                                             num_buckets=3)
 
         # Create new table
-        #self._kudu_client.create_table('tag_mappings', tm_schema, tm_partitioning, n_replicas=3)
-        #self._kudu_client.create_table('raw_measurements', rm_schema, rm_partitioning, n_replicas=3)
+        self._kudu_client.create_table('tag_mappings', tm_schema, tm_partitioning, n_replicas=3)
+        self._kudu_client.create_table('raw_measurements', rm_schema, rm_partitioning, n_replicas=3)
         self._kudu_client.create_table('measurements', m_schema, m_partitioning, n_replicas=3)
 
     # Generate well sensor device to tag description mappings
     def generate_tag_mappings(self):
         print 'Generating tag ID/description mappings'
         tag_mapping = {}
-        table = self._kudu_client.table('tag_mappings')
+        if not self._file:
+          table = self._kudu_client.table('tag_mappings')
 
         for device_id in range(0, self._config['sensors']):
             tag_mapping['tag_id'] = int('%d' % device_id)
             tag_mapping['sensor_name'] = 'Sensor_%d' % device_id
-            self._kudu_session.apply(table.new_upsert(tag_mapping))
+            if self._file:
+              with open('sampledata/tag_mappings.json','a') as outfile:
+                json.dump(tag_mapping, outfile)
+                outfile.write('\n')
+            else:  
+              self._kudu_session.apply(table.new_upsert(tag_mapping))
 
-        self._kudu_session.flush()
-            # with open('sampledata/tag_mappings.json','a') as outfile:
-            #     json.dump(tag_mapping, outfile)
-            #     outfile.write('\n')
+        if not self._file:
+          self._kudu_session.flush()
 
     # Generate well sensor data (either historic or in real-time)
     def generate_sensor_data(self, historic = False, file = False):
         print 'Generating sensor device historical data'
-        raw_table = self._kudu_client.table('raw_measurements')
+        if not file:
+          raw_table = self._kudu_client.table('raw_measurements')
 
         days_history = self._config['days_history']
         measurement_interval = self._config['measurement_interval']
@@ -135,6 +142,7 @@ class DataGenerator():
             start_date = datetime.datetime.now()
             end_date = start_date + dateutil.relativedelta.relativedelta(days=days_history)
 
+        raw_measurements = []
         print('Simulation Duration [%s, %s]' % (start_date, end_date))
 
         simulation_day = 0
@@ -143,7 +151,7 @@ class DataGenerator():
         for simulation_date in [start_date + datetime.timedelta(days = x)
                      for x in range(0, days_history)]:
             end_of_day = simulation_date.replace(hour=0,minute=0,second=0,microsecond=0) + datetime.timedelta(days=1)
-
+            print(simulation_date)
             simulation_day += 1
             program_maint = (simulation_day % 5 == 0 and state==0)       # program maintenance every 5 days
 
@@ -187,7 +195,10 @@ class DataGenerator():
                     measurement['Sensor_%d' % device_id] = raw_measurement['value']
 
                     if historic:
-                        self._kudu_session.apply(raw_table.new_upsert(raw_measurement))
+                        if file:
+                          raw_measurements.append(json.dumps(raw_measurement))
+                        else:
+                          self._kudu_session.apply(raw_table.new_upsert(raw_measurement))
                     else:
                         self._kafka_producer.send(self._config['kafka_topic'], value=json.dumps(raw_measurement))
 
@@ -202,12 +213,16 @@ class DataGenerator():
                                                       (random.random()*0.2+0.9)
 
                 if historic:
-                    self._kudu_session.apply(raw_table.new_upsert(predicted_measurement))
+                    if file:
+                      raw_measurements.append(json.dumps(predicted_measurement))
+                    else:
+                      self._kudu_session.apply(raw_table.new_upsert(predicted_measurement))
                 else:
                     self._kafka_producer.send(self._config['kafka_topic'], value=json.dumps(predicted_measurement))
                     time.sleep(measurement_interval)
 
-            self._kudu_session.flush()
+            if not file:
+              self._kudu_session.flush()
 
             if program_maint or state==3:
                 self._generate_maintenance_report(date=simulation_date,
@@ -216,22 +231,11 @@ class DataGenerator():
                 state=0 # Reset to healthy
                 faulty_device = 0
 
-        # print('Writing raw measurements to file')
-        # with open('sampledata/raw_measurements.json', 'a') as outfile:
-        #     for measurement in self._raw_measurements:
-        #         outfile.write(measurement+'\n')
-        # print('Writing measurements to file')
-        # with open('sampledata/measurements.json', 'a') as outfile:
-        #     for measurement in self._measurements:
-        #         outfile.write(measurement+'\n')
-        # print('Writing maintenance costs to file')
-        # with open('sampledata/maintenance_costs.csv', 'a') as outfile:
-        #     for maint_cost in self._maintenance_costs:
-        #         outfile.write(maint_cost)
-        # print('Writing maintenance logs to file')
-        # with open('sampledata/maintenance_logs.csv', 'a') as outfile:
-        #     for maint_log in self._maintenance_logs:
-        #         outfile.write(maint_log)
+        if file:
+           print('Writing raw measurements to file')
+           with open('sampledata/raw_measurements.json', 'a') as outfile:
+               for measurement in raw_measurements:
+                   outfile.write(measurement+'\n')
 
     def _generate_maintenance_report(self, date, state, faulty_device_id):
         faulty_device = 'Sensor_%d' % faulty_device_id
@@ -257,8 +261,8 @@ class DataGenerator():
         # self._maintenance_costs.append('%s,%d\n' % (date.strftime('%Y-%m-%d'), cost))
         # self._maintenance_logs.append('%s|%s|%d\n' % (date.strftime('%Y-%m-%d'), message, duration))
 
-        with open('maintenance/costs.csv', 'a') as outfile:
+        with open('sampledata/maint_costs.csv', 'a') as outfile:
             outfile.write('%s,%d\n' % (date.strftime('%Y-%m-%d'), cost))
 
-        with open('maintenance/%s_notes.txt' % date.strftime('%Y-%m-%d'), 'a') as outfile:
+        with open('sampledata/maint_notes.txt', 'a') as outfile:
             outfile.write('%s|%s|%d\n' % (date.strftime('%Y-%m-%d'), message, duration))

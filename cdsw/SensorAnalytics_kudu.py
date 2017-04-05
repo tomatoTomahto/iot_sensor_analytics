@@ -453,9 +453,6 @@ costSavings.agg(F.sum('actualCost').alias('TotalCost'),
   .withColumn('TotalSavings(%)', F.col('TotalSavings($)')/F.col('TotalCost')*100)\
   .select('TotalSavings($)', 'TotalSavings(%)')\
   .toPandas()
-
-maintTypes = ldaModel.transform(maintVectors)\
-  .select('date',findCluster('topicDistribution').alias('maintenanceType'), 'duration')
   
 # That's it! We have successfully built a machine learning model that predicts with over
 # 95% accuracy whether maintenance needs to be done on our asset using sensor data. 
