@@ -22,57 +22,57 @@
 
 # Registers:
 ""1	LINE	0
-	
+	sampledata/
 "2	LINE	0
-	max_leakage_risk = 5
+	
 "3	LINE	0
-	well_chemicals = oil,lng
+	max_leakage_risk = 5
 "4	LINE	0
-	well_types = onshore
+	well_chemicals = oil,lng
 "5	LINE	0
-	max_well_depth = 7500
+	well_types = onshore
 "6	LINE	0
-	min_well_depth = 4700
+	max_well_depth = 7500
 "7	LINE	0
-	max_lat = 60
+	min_well_depth = 4700
 "8	LINE	0
-	min_lat = 53
+	max_lat = 60
 "9	LINE	0
-	max_long = 119
+	min_lat = 53
 
 # File marks:
-'0  9  25  ~/config.ini
-'1  1  0  ~/impala/createTables.sql
-'2  7  0  ~/config.ini
-'3  12  25  ~/.gitignore
+'0  11  0  ~/.gitignore
+'1  9  25  ~/config.ini
+'2  1  0  ~/impala/createTables.sql
+'3  7  0  ~/config.ini
 '4  4  0  ~/config.ini
 
 # Jumplist (newest first):
+-'  11  0  ~/.gitignore
+-'  1  0  ~/.gitignore
+-'  9  25  ~/config.ini
+-'  1  0  ~/config.ini
+-'  1  0  ~/impala/createTables.sql
+-'  7  0  ~/config.ini
+-'  4  0  ~/config.ini
+-'  16  0  ~/config.ini
+-'  1  0  ~/impala/createTables.sql
 -'  9  25  ~/config.ini
 -'  1  0  ~/config.ini
 -'  1  0  ~/impala/createTables.sql
 -'  7  0  ~/config.ini
 -'  12  25  ~/.gitignore
--'  1  0  ~/.gitignore
 -'  4  0  ~/config.ini
--'  12  25  ~/.gitignore
--'  1  0  ~/.gitignore
 -'  16  0  ~/config.ini
--'  12  25  ~/.gitignore
--'  1  0  ~/.gitignore
--'  12  25  ~/.gitignore
--'  1  0  ~/.gitignore
 -'  1  0  ~/impala/createTables.sql
--'  12  25  ~/.gitignore
--'  1  0  ~/.gitignore
--'  12  25  ~/.gitignore
--'  1  0  ~/.gitignore
--'  12  25  ~/.gitignore
--'  1  0  ~/.gitignore
--'  12  25  ~/.gitignore
--'  1  0  ~/.gitignore
 
 # History of marks within files (newest to oldest):
+
+> ~/.gitignore
+	"	11	0
+	^	11	26
+	.	11	0
+	+	11	0
 
 > ~/config.ini
 	"	9	25
@@ -86,9 +86,3 @@
 
 > ~/impala/createTables.sql
 	"	1	0
-
-> ~/.gitignore
-	"	12	25
-	^	12	26
-	.	12	25
-	+	12	25

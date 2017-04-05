@@ -1,0 +1,281 @@
+2014-04-08|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2014-04-10|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2014-04-16|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2014-04-19|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2014-04-20|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-04-25|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2014-05-01|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2014-05-05|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2014-05-08|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|23
+2014-05-10|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-05-15|Sensor_8 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|7
+2014-05-20|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|23
+2014-05-25|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|21
+2014-05-30|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-06-05|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|20
+2014-06-09|Sensor_6 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|9
+2014-06-14|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2014-06-19|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-06-24|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|14
+2014-06-27|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|14
+2014-06-29|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2014-07-04|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2014-07-09|Sensor_8 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|6
+2014-07-15|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2014-07-19|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-07-24|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-07-28|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|20
+2014-07-29|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2014-08-02|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2014-08-03|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-08-08|Sensor_4 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|7
+2014-08-13|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2014-08-19|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2014-08-23|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-08-27|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2014-08-28|Sensor_4 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|7
+2014-09-02|Sensor_6 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|8
+2014-09-05|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|23
+2014-09-07|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-09-10|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2014-09-12|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-09-17|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2014-09-22|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2014-09-27|Sensor_8 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|9
+2014-10-02|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-10-07|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-10-10|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2014-10-12|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-10-15|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|14
+2014-10-17|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2014-10-21|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2014-10-22|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-10-27|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2014-11-01|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2014-11-04|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2014-11-06|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2014-11-11|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2014-11-16|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2014-11-19|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2014-11-21|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2014-11-25|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|21
+2014-11-26|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-11-30|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2014-12-01|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-12-05|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|21
+2014-12-06|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-12-10|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2014-12-11|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-12-16|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-12-22|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|23
+2014-12-25|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|20
+2014-12-26|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2014-12-30|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2014-12-31|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-01-05|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-01-11|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2015-01-15|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-01-20|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-01-25|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2015-01-30|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-02-04|Sensor_8 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|8
+2015-02-09|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2015-02-15|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2015-02-20|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2015-02-24|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-02-28|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2015-03-01|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-03-07|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|20
+2015-03-10|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2015-03-11|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-03-14|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|14
+2015-03-16|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-03-22|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2015-03-26|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-03-29|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2015-03-31|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-04-05|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2015-04-11|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|21
+2015-04-15|Sensor_4 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|6
+2015-04-20|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2015-04-25|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-04-29|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|20
+2015-04-30|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-05-03|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2015-05-05|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-05-11|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|23
+2015-05-16|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2015-05-21|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2015-05-26|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2015-05-30|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-06-04|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|14
+2015-06-10|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|14
+2015-06-13|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2015-06-14|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-06-18|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2015-06-19|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-06-22|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|23
+2015-06-24|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-06-29|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-07-03|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2015-07-04|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-07-09|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-07-12|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2015-07-15|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|14
+2015-07-19|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2015-07-24|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-07-29|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2015-08-03|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2015-08-06|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|20
+2015-08-08|Sensor_6 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|8
+2015-08-11|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2015-08-13|Sensor_8 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|7
+2015-08-18|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-08-24|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2015-08-28|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-09-03|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2015-09-07|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2015-09-13|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|21
+2015-09-17|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2015-09-22|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2015-09-25|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2015-09-27|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-10-02|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2015-10-07|Sensor_4 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|9
+2015-10-13|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2015-10-18|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2015-10-23|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2015-10-28|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|21
+2015-11-02|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2015-11-05|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2015-11-06|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-11-11|Sensor_8 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|9
+2015-11-14|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2015-11-16|Sensor_4 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|7
+2015-11-21|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|20
+2015-11-26|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-12-01|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-12-04|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2015-12-06|Sensor_6 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|8
+2015-12-11|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2015-12-16|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2015-12-22|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|20
+2015-12-26|Sensor_4 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|6
+2015-12-31|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2016-01-05|Sensor_6 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|7
+2016-01-08|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2016-01-10|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-01-15|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2016-01-20|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-01-24|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|21
+2016-01-25|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-01-28|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2016-01-30|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-02-05|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2016-02-09|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2016-02-14|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-02-20|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2016-02-23|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2016-02-24|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-02-28|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2016-02-29|Sensor_2 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|7
+2016-03-03|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|14
+2016-03-05|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-03-08|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|14
+2016-03-10|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2016-03-15|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2016-03-20|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2016-03-25|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2016-03-29|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|23
+2016-03-30|Sensor_4 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|8
+2016-04-03|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2016-04-04|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-04-09|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2016-04-12|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|14
+2016-04-14|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-04-19|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-04-25|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2016-04-29|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2016-05-03|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2016-05-04|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2016-05-09|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|23
+2016-05-14|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-05-17|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2016-05-19|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2016-05-23|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|20
+2016-05-24|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2016-05-30|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2016-06-04|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2016-06-08|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2016-06-13|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-06-18|Sensor_4 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|6
+2016-06-22|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2016-06-23|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2016-06-26|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2016-06-29|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|20
+2016-07-03|Sensor_6 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|8
+2016-07-06|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2016-07-08|Sensor_2 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|9
+2016-07-14|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|14
+2016-07-18|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-07-24|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|23
+2016-07-28|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-08-02|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-08-08|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2016-08-12|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-08-18|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2016-08-22|Sensor_2 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|8
+2016-08-26|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2016-08-27|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-09-02|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2016-09-06|Sensor_4 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|6
+2016-09-09|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|23
+2016-09-11|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-09-16|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-09-21|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2016-09-25|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|21
+2016-09-26|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-10-01|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2016-10-04|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2016-10-06|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2016-10-11|Sensor_2 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|7
+2016-10-16|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-10-21|Sensor_6 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|6
+2016-10-26|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|20
+2016-10-31|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2016-11-06|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2016-11-10|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2016-11-15|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-11-20|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-11-26|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|21
+2016-12-01|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|14
+2016-12-05|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2016-12-09|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2016-12-10|Sensor_8 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|7
+2016-12-15|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-12-20|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2016-12-25|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2016-12-30|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2017-01-04|Sensor_8 showing abnormal readings. Preventive maintenance required. Scheduling component replacement|9
+2017-01-07|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2017-01-10|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2017-01-15|Asset failure due to high Sensor_6 and Sensor_5. Asset shutdown. Corrective maintenance required.|17
+2017-01-19|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2017-01-24|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|16
+2017-01-30|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2017-02-03|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2017-02-08|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2017-02-13|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2017-02-16|Asset failure due to high Sensor_8 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2017-02-18|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2017-02-22|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|15
+2017-02-23|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2017-02-26|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|23
+2017-02-28|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2017-03-06|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|18
+2017-03-10|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2017-03-15|Program maintenance tests all passed. Asset healthy. Sensor readings normal|2
+2017-03-20|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
+2017-03-25|Asset failure due to high Sensor_4 and Sensor_5. Asset shutdown. Corrective maintenance required.|19
+2017-03-30|Asset failure due to high Sensor_2 and Sensor_5. Asset shutdown. Corrective maintenance required.|22
+2017-04-04|Program maintenance tests all passed. Asset healthy. Sensor readings normal|3
