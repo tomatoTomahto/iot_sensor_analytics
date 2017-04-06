@@ -8,8 +8,8 @@
 # hlsearch on (H) or off (h):
 ~h
 # Command Line History (newest to oldest):
-:wq
 :q
+:wq
 :w
 
 # Search String History (newest to oldest):
@@ -41,14 +41,14 @@
 	min_lat = 53
 
 # File marks:
-'0  11  0  ~/.gitignore
+'0  11  6  ~/.gitignore
 '1  9  25  ~/config.ini
 '2  1  0  ~/impala/createTables.sql
 '3  7  0  ~/config.ini
 '4  4  0  ~/config.ini
 
 # Jumplist (newest first):
--'  11  0  ~/.gitignore
+-'  11  6  ~/.gitignore
 -'  1  0  ~/.gitignore
 -'  9  25  ~/config.ini
 -'  1  0  ~/config.ini
@@ -65,11 +65,25 @@
 -'  4  0  ~/config.ini
 -'  16  0  ~/config.ini
 -'  1  0  ~/impala/createTables.sql
+-'  9  25  ~/config.ini
+-'  1  0  ~/config.ini
+-'  1  0  ~/impala/createTables.sql
+-'  7  0  ~/config.ini
+-'  4  0  ~/config.ini
+-'  16  0  ~/config.ini
+-'  1  0  ~/impala/createTables.sql
+-'  9  25  ~/config.ini
+-'  1  0  ~/config.ini
+-'  1  0  ~/impala/createTables.sql
+-'  7  0  ~/config.ini
+-'  4  0  ~/config.ini
+-'  16  0  ~/config.ini
+-'  1  0  ~/impala/createTables.sql
 
 # History of marks within files (newest to oldest):
 
 > ~/.gitignore
-	"	11	0
+	"	11	6
 	^	11	26
 	.	11	0
 	+	11	0
