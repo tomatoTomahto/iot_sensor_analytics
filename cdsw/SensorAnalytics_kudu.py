@@ -78,7 +78,9 @@ Image(filename='img/kudu.png')
 # # Demo Start
 # ## Setup Tasks
 # * Install Python packages used by the demo
+# * Load maintenance logs into HDFS
 !conda install -y ConfigParser
+!hdfs dfs -put maintenance
 
 # ## Initialization
 # ### Spark Library Imports
