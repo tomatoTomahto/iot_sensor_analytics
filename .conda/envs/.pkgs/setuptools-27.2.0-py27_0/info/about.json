@@ -1,8 +1,0 @@
-{
-  "description": "Setuptools is a fully-featured, actively-maintained, and stable library\ndesigned to facilitate packaging Python projects.\n", 
-  "dev_url": "https://github.com/pypa/setuptools", 
-  "doc_url": "http://pythonhosted.org/setuptools/", 
-  "home": "https://pypi.python.org/pypi/setuptools", 
-  "license": "MIT", 
-  "summary": "Download, build, install, upgrade, and uninstall Python packages"
-}

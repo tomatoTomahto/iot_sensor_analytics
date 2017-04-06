@@ -1,7 +1,0 @@
-platform:  Linux-2.6.18-416.el5-x86_64-with-redhat-5.11-Final
-system:    Linux
-node:      atx-centos5x64.corp.continuum.io
-release:   2.6.18-416.el5
-version:   #1 SMP Fri Oct 28 11:52:49 UTC 2016
-machine:   x86_64
-processor: x86_64
