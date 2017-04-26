@@ -23,6 +23,7 @@ wget http://archive.cloudera.com/kudu/redhat/7/x86_64/kudu/cloudera-kudu.repo
 sudo mv cloudera-kudu.repo /etc/yum.repos.d/
 sudo yum install kudu-client0 kudu-client-devel -y
 LDFLAGS=-L/opt/cloudera/parcels/Anaconda/lib pip install kudu-python
+pip install kudu
 pip install kafka
 pip install configparser
 ```

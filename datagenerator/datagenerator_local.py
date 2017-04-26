@@ -47,7 +47,9 @@ class DataGenerator():
         
         self._file = file
         if not self._file:
+          global kudu
           import kudu
+          global Partitioning
           from kudu.client import Partitioning
           self._connect_kafka()
           self._connect_kudu()
