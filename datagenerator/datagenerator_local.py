@@ -65,7 +65,7 @@ class DataGenerator():
 
     # Create Kudu tables
     def create_tables(self):
-        for table in ['measurements']:
+        for table in ['enriched_measurements','measurements','raw_measurements','tag_mappings']:
             if self._kudu_client.table_exists(table):
                 self._kudu_client.delete_table(table)
 
@@ -80,7 +80,7 @@ class DataGenerator():
 
         # Define a schema for a raw_measurements table
         rm_builder = kudu.schema_builder()
-        rm_builder.add_column('record_time').type(kudu.string).nullable(False)
+        rm_builder.add_column('record_time').type(kudu.int64).nullable(False)
         rm_builder.add_column('tag_id').type(kudu.int32).nullable(False)
         rm_builder.add_column('value').type(kudu.double).nullable(False)
         rm_builder.set_primary_keys(['record_time','tag_id'])
@@ -92,9 +92,9 @@ class DataGenerator():
 
         # Define a schema for a measurements table
         m_builder = kudu.schema_builder()
-        m_builder.add_column('record_time').type(kudu.string).nullable(False)
-        for device_id in range(0,self._config['sensors']):
-            m_builder.add_column('Sensor_%d' % device_id).type(kudu.double).nullable(True)
+        m_builder.add_column('record_time').type(kudu.int64).nullable(False)
+        for sensor in ['Temperature','Pressure','FlowRate']:
+            m_builder.add_column(sensor).type(kudu.double).nullable(True)
         m_builder.set_primary_keys(['record_time'])
         m_schema = m_builder.build()
 
@@ -105,7 +105,7 @@ class DataGenerator():
         # Create new table
         self._kudu_client.create_table('tag_mappings', tm_schema, tm_partitioning, n_replicas=3)
         self._kudu_client.create_table('raw_measurements', rm_schema, rm_partitioning, n_replicas=3)
-        self._kudu_client.create_table('measurements', m_schema, m_partitioning, n_replicas=3)
+        self._kudu_client.create_table('enriched_measurements', m_schema, m_partitioning, n_replicas=3)
 
     # Generate well sensor device to tag description mappings
     def generate_tag_mappings(self):
@@ -172,7 +172,7 @@ class DataGenerator():
                      for x in range(0, int((end_of_day-simulation_date).total_seconds()), measurement_interval)]:
                 date_str = simulation_time.strftime('%Y-%m-%d %H:%M:%S')
                 if not historic:
-                    print('Time: %s' % date_str)
+                    print('Generating Sensors Data, Time: %s' % date_str)
 
                 # Generate measurement for a random device
                 raw_measurement = {}
