@@ -117,7 +117,8 @@ maintCostsPD.describe()
 maintCosts.groupBy(F.date_format('date','yyyyMM').alias('month'))\
   .agg(F.round(F.sum('cost')).alias('cost'))\
   .orderBy('month').toPandas().plot(kind='line', x='month', y='cost', title='Monthly Maintenance Costs')
-sb.distplot(maintCostsPD['cost'], bins=100, hist=True, kde_kws={"shade": True}).set(xlim=(0, max(maintCostsPD['cost'])))
+sb.distplot(maintCostsPD['cost'], bins=100, hist=True, kde_kws={"shade": True})\
+  .set(xlim=(0, max(maintCostsPD['cost'])),title='Histogram of Maintenance Costs')
 
 # ## Text Analytics of Maintenance Logs
 # Spark provides rich text analytics capabilities including nGram extraction, TF-IDF, 
@@ -166,9 +167,9 @@ for topic in topics.collect():
     for termIndex in topic[1]:
         print('  %s' % vocabArray[termIndex])
 
-topic_1 = 'Corrective'
+topic_1 = 'Healthy'
 topic_2 = 'Preventive'
-topic_3 = 'Healthy'
+topic_3 = 'Corrective'
       
 # ### Apply Maintenance Clusters (Types) to Maintenance Costs
 # Let's use the clusters identified above to classify our maintenance costs
@@ -194,8 +195,8 @@ from scipy.stats import kendalltau
 sb.set(style="ticks")
 sb.jointplot(maintClusters['cost'], maintClusters['duration'], 
              kind="hex", stat_func=kendalltau, color="#4CB391")
-
-sb.pairplot(maintClusters, hue="maintenanceType", vars=['cost','duration'])
+sb.lmplot('cost','duration',data=maintClusters, hue='maintenanceType', fit_reg=False)\
+  .set(title='Maintenance Cost vs. Duration - Clustered by Maintenance Notes')
 
 # ## Visualization and Machine learning on Sensor Data
 # Now that we are able to use the maintenance logs to identify the type of maintenance
@@ -219,14 +220,6 @@ ax = sb.boxplot(x="value", y="sensor_name",
                 whis=np.inf, color="c")
 sb.despine(trim=True)
 
-#sb.set(style="whitegrid", palette="muted")
-#maintSensorDailyPD = maintTypes.filter('year(date)>=2016')\
-#  .select(maintTypes.date.alias('day'), 'maintenanceType')\
-#  .join(dailyRawMeasurements, 'day')\
-#  .select('maintenanceType', 'sensor_name', 'value')\
-#  .toPandas()
-#sb.swarmplot(y='sensor_name', x='value', hue='maintenanceType', data=maintSensorDailyPD)
-
 # Let's plot the maintenance type against sensor readings right before we have an outage
 progPrevMaint = maintTypes.filter('maintenanceType!="Corrective"')\
   .select('date', 'maintenanceType')\
@@ -239,8 +232,26 @@ corrMaint = maintTypes.filter('maintenanceType=="Corrective"')\
 
 rawSensorsByMaint = progPrevMaint.union(corrMaint)
 
-sb.swarmplot(y='sensor_name', x='value', hue='maintenanceType', 
-             data=rawSensorsByMaint.filter('year(date)>=2016').select('sensor_name', 'value', 'maintenanceType').toPandas())
+p = sb.violinplot(x="value", y="sensor_name", hue="maintenanceType", split=True,
+                  data=rawSensorsByMaint.filter('year(date)>=2016 and maintenanceType == "Healthy" or maintenanceType == "Corrective"').select('sensor_name', 'value', 'maintenanceType').toPandas(), 
+                  inner="quart", palette={"Healthy": "g", "Corrective": "r"})
+p.set(title='Sensor Readings Grouped by Maintenance Type')
+
+# We can also graph the correlation matrix for the sensors - TODO
+meas = rawMeasurements.filter(F.year('record_time')>2016)\
+  .groupBy('record_time')\
+  .pivot('sensor_name')\
+  .agg(F.avg('value'))
+
+sensorNameArray = meas.columns
+sensorNameArray.remove('record_time')
+corr = meas.select(sensorNameArray).toPandas().corr()
+mask = np.zeros_like(corr, dtype=np.bool)
+mask[np.triu_indices_from(mask)] = True
+
+cmap = sb.diverging_palette(220, 10, as_cmap=True)
+sb.heatmap(corr, mask=mask, xticklabels=sensorNameArray, yticklabels=sensorNameArray,
+            square=True, linewidths=.5, cbar_kws={"shrink": .5})
 
 # ### Spark Machine Learning Capabilities
 # The analysis and visualizations above indicate that there is some relationship between
@@ -284,7 +295,10 @@ modelData = rawSensorsByMaint.groupBy('date','maintenanceType')\
   .agg(F.avg(F.round('value')))
 modelData.persist()
 modelData.select('date', 'Sensor_5').show()
-modelData.select('Sensor_5', 'Sensor_7').describe().show()
+modelData.select('Sensor_3',
+                 'Sensor_5',
+                 'Sensor_6', 
+                 'Sensor_8').describe().show()
 
 # Now we need to convert our feature columns (sensor names) into a vector for each row
 va = VectorAssembler(inputCols=sensorNames, outputCol="features")\
@@ -337,22 +351,6 @@ sb.set_color_codes("pastel")
 sb.barplot(x="Importance (%)", y="Sensor", 
            data=sensorImportancesPD,
            label="Total", color="b")
-
-# We can also graph the correlation matrix for the sensors - TODO
-meas = rawMeasurements.filter(F.year('record_time')>2016)\
-  .groupBy('record_time')\
-  .pivot('sensor_name')\
-  .agg(F.avg('value'))
-
-sensorNameArray = meas.columns
-sensorNameArray.remove('record_time')
-corr = meas.select(sensorNameArray).toPandas().corr()
-mask = np.zeros_like(corr, dtype=np.bool)
-mask[np.triu_indices_from(mask)] = True
-
-cmap = sb.diverging_palette(220, 10, as_cmap=True)
-sb.heatmap(corr, mask=mask, xticklabels=sensorNameArray, yticklabels=sensorNameArray,
-            square=True, linewidths=.5, cbar_kws={"shrink": .5})
 
 # #### Model Tuning
 # Spark has advanced model tuning capabilities as well. Let's improve our Random Forest
@@ -432,21 +430,19 @@ predictedMaintenance = i2s.transform(predictions)\
 costSavings = predictedMaintenance.select('date', 'cost', predictedCost('maintenanceType','predictedLabel','cost').alias('predictedCost'))\
   .withColumn('costSavings', F.col('cost')-F.col('predictedCost'))\
   .groupBy(F.date_format('date','yyyyMM').alias('month'))\
-  .agg(F.sum('cost').alias('actualCost'), F.sum('predictedCost').alias('predictedCost'), F.sum('costSavings').alias('predictedSavings'))
+  .agg(F.sum('cost').alias('Cost (without model)'), F.sum('predictedCost').alias('Cost (with model)'), F.sum('costSavings').alias('predictedSavings'))
   
-csPD = costSavings.select('month',F.round('actualCost'),F.round('predictedCost')).toPandas()
+csPD = costSavings.select('month','Cost (without model)','Cost (with model)').toPandas()
 csPD.plot(kind='line', x='month')
 csPD.describe()
 
 print('Total Cost Savings Using This Model')
-costSavings.agg(F.sum('actualCost').alias('TotalCost'), 
-                F.sum('predictedSavings').alias('TotalSavings($)'))\
-  .withColumn('TotalSavings(%)', F.col('TotalSavings($)')/F.col('TotalCost')*100)\
-  .select('TotalSavings($)', 'TotalSavings(%)')\
+costSavings.agg(F.sum('Cost (without model)').alias('TotalCost'), 
+                F.sum('predictedSavings').alias('Total Savings ($)'))\
+  .withColumn('Total Savings (%)', F.col('Total Savings ($)')/F.col('TotalCost')*100)\
+  .select('Total Savings ($)', 'Total Savings (%)')\
   .toPandas()
-
-maintTypes = ldaModel.transform(maintVectors)\
-  .select('date',findCluster('topicDistribution').alias('maintenanceType'), 'duration')
   
 # That's it! We have successfully built a machine learning model that predicts with over
-# 95% accuracy whether maintenance needs to be done on our asset using sensor data. 
+# 95% accuracy whether maintenance needs to be done on our asset using sensor data. Using
+# this model, we could have saved over 60% of our maintenance costs!
