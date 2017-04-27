@@ -4,6 +4,7 @@
 .config/
 .ipython/
 .ivy/
+.ivy2/
 .local/
 .pip/
 .ssh/
