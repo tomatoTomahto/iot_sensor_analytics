@@ -29,37 +29,35 @@ class AssetBuilder():
                     self._kudu.insert('impala::sensors.asset_groups', {'group_id':int(row[0]), 'group_name':str(row[1])})
         self._kudu.flush()
 
-        asset_groups = {}
+        asset_ids = {}
         with open('assets.csv', 'r') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             asset_id = 1
             for row in reader:
-                asset_count = int(row[2])
                 for well_id in range(1,self._wells+1):
-                    for asset_number in range(1,asset_count+1):
-                        if load:
-                            self._kudu.insert('impala::sensors.well_assets',
-                                              {'asset_id': asset_id,
-                                               'well_id': well_id,
-                                               'asset_group_id': int(row[0]),
-                                               'asset_name': str(row[1]) + ' ' + str(asset_number)})
-                        asset_groups[asset_id] = {'group_id':int(row[0]), 'well_id':well_id}
-                        asset_id += 1
+                    if load:
+                        self._kudu.insert('impala::sensors.well_assets',
+                                          {'asset_id': asset_id,
+                                           'well_id': well_id,
+                                           'asset_group_id': int(row[1]),
+                                           'asset_name': str(row[2])})
+                    asset_ids[asset_id] = {'asset_id':int(row[0]), 'well_id':well_id}
+                    asset_id += 1
         self._kudu.flush()
 
         with open('sensors.csv', 'r') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for row in reader:
-                self._sensor_info[str(row[1])] = {'group_id' : int(row[0]),
+                self._sensor_info[str(row[1])] = {'asset_id' : int(row[0]),
                                              'depends_on' : str(row[2]),
                                              'units' : str(row[3]),
                                              'min' : int(row[4])}
 
         sensors = []
         sensor_id = 1
-        for asset_id in asset_groups.keys():
+        for asset_id in asset_ids.keys():
             for sensor_name in self._sensor_info.keys():
-                if self._sensor_info[sensor_name]['group_id'] == asset_groups[asset_id]['group_id']:
+                if self._sensor_info[sensor_name]['asset_id'] == asset_ids[asset_id]['asset_id']:
                     sensor = {'sensor_id': sensor_id,
                               'asset_id': asset_id,
                               'sensor_name': sensor_name,
@@ -67,7 +65,7 @@ class AssetBuilder():
                     if load:
                         self._kudu.insert('impala::sensors.asset_sensors', sensor)
 
-                    sensor['well_id'] = asset_groups[asset_id]['well_id']
+                    sensor['well_id'] = asset_ids[asset_id]['well_id']
                     sensor['min'] = self._sensor_info[sensor_name]['min']
                     sensor['depends_on'] = sensor_id
                     sensors.append(sensor)
@@ -88,15 +86,13 @@ class AssetBuilder():
 
     def build_readings(self, timestamp):
         self._scaling_factors = {}
-        self._scaling_factors[0] = random.random()*0.1 + 0.95
+
         for sensor in self._sensors:
             sensor_id = sensor['sensor_id']
             depends_on = sensor['depends_on']
             min_value = sensor['min']
             if sensor_id not in self._scaling_factors.keys():
                 self._build_dependent_readings(sensor)
-
-                self._scaling_factors[sensor_id] = (random.random()*0.1 + 0.95) * self._scaling_factors[depends_on]
 
             if random.random()<0.5:
                 continue
@@ -115,7 +111,7 @@ class AssetBuilder():
 
         sensor_id = sensor['sensor_id']
         depends_on = sensor['depends_on']
-        
+
         if sensor['depends_on'] not in self._scaling_factors.keys():
             for dep_sensor in self._sensors:
                 if dep_sensor['sensor_id'] == sensor['depends_on']:
