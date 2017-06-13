@@ -65,7 +65,7 @@ class DataGenerator():
 
     # Create Kudu tables
     def create_tables(self):
-        for table in ['enriched_measurements','measurements','raw_measurements','tag_mappings']:
+        for table in ['enriched_measurements','measurements','raw_measurements','tag_mappings','well_information']:
             if self._kudu_client.table_exists(table):
                 self._kudu_client.delete_table(table)
 
@@ -88,7 +88,7 @@ class DataGenerator():
 
         # Define partitioning schema
         rm_partitioning = Partitioning().add_hash_partitions(column_names=['record_time','tag_id'],
-                                                             num_buckets=3)
+                                                             num_buckets=15)
 
         # Define a schema for a measurements table
         m_builder = kudu.schema_builder()
@@ -100,12 +100,58 @@ class DataGenerator():
 
         # Define partitioning schema
         m_partitioning = Partitioning().add_hash_partitions(column_names=['record_time'],
-                                                            num_buckets=3)
+                                                            num_buckets=15)
+
+        # Define a schema for a well_information table
+        wi_builder = kudu.schema_builder()
+        wi_builder.add_column('well_id').type(kudu.int64).nullable(False)
+        for column in ['latitude','longitude','depth','chemical']:
+            wi_builder.add_column(sensor).type(kudu.double).nullable(True)
+        wi_builder.set_primary_keys(['well_id'])
+        wi_schema = m_builder.build()
+
+        # Define partitioning schema
+        wi_partitioning = Partitioning().add_hash_partitions(column_names=['well_id'],
+                                                            num_buckets=15)
 
         # Create new table
         self._kudu_client.create_table('tag_mappings', tm_schema, tm_partitioning, n_replicas=3)
         self._kudu_client.create_table('raw_measurements', rm_schema, rm_partitioning, n_replicas=3)
         self._kudu_client.create_table('enriched_measurements', m_schema, m_partitioning, n_replicas=3)
+        self._kudu_client.create_table('well_information', wi_schema, wi_partitioning, n_replicas=3)
+
+    # Generate well information
+    def generate_well_information(self):
+        print 'Generating well information'
+        well_info = {}
+        if not self._file:
+          table = self._kudu_client.table('well_information')
+
+        wells = self._config['wells']
+        min_lat = self._config['min_lat']
+        max_lat = self._config['max_lat']
+        min_long = self._config['min_long']
+        max_long = self._config['max_long']
+        min_well_depth = self._config['min_well_depth']
+        max_well_depth = self._config['max_well_depth']
+        well_chemicals = self._config['well_chemicals']
+
+        for well_id in range(1, wells+1):
+            well_info['well_id'] = well_id
+            well_info['latitude'] = random.uniform(min_lat, max_lat)
+            well_info['longitude'] = random.uniform(min_long, max_long)
+            well_info['depth'] = random.uniform(min_well_depth, max_well_depth)
+            well_info['well_chemical'] = well_chemicals[random.randint(0,len(well_chemicals)-1)]
+            if self._file:
+              with open('sampledata/well_information.json','a') as outfile:
+                json.dump(well_info, outfile)
+                outfile.write('\n')
+            else:
+              self._kudu_session.apply(table.new_upsert(well_info))
+
+        if not self._file:
+          self._kudu_session.flush()
+
 
     # Generate well sensor device to tag description mappings
     def generate_tag_mappings(self):
