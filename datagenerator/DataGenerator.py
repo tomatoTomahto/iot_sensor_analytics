@@ -68,7 +68,8 @@ class DataGenerator():
             failed_asset_state = self._maint.get_failed_asset_state()
             start_hour = self._maint.get_start_hour()
             end_hour = self._maint.get_end_hour()
+            fail_hour = self._maint.get_fail_hour()
 
             for simulation_time in [simulation_date + datetime.timedelta(seconds = x)
                      for x in range(0, int((end_of_day-simulation_date).total_seconds()), measurement_interval)]:
-                self._ab.build_readings(time.mktime(simulation_time.timetuple()), failed_asset, start_hour, end_hour)
+                self._ab.build_readings(time.mktime(simulation_time.timetuple()), failed_asset, start_hour, end_hour, fail_hour)

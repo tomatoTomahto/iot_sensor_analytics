@@ -91,7 +91,7 @@ class AssetBuilder():
 
         print(self._sensors)
 
-    def build_readings(self, timestamp, failed_asset=0, start_hour=0, end_hour=0):
+    def build_readings(self, timestamp, failed_asset=0, start_hour=0, end_hour=0, fail_hour=0):
         self._scaling_factors = {}
 
         for sensor in self._sensors:
@@ -101,7 +101,7 @@ class AssetBuilder():
             if sensor_id not in self._scaling_factors.keys():
                 self._build_dependent_readings(sensor,
                                                datetime.datetime.fromtimestamp(timestamp).hour,
-                                               failed_asset, start_hour, end_hour)
+                                               failed_asset, start_hour, end_hour, fail_hour)
 
             if random.random()<0.5:
                 continue
@@ -113,13 +113,15 @@ class AssetBuilder():
 
         self._kudu.flush()
 
-    def _build_dependent_readings(self, sensor, hour, failed_asset=0, start_hour=0, end_hour=0):
+    def _build_dependent_readings(self, sensor, hour, failed_asset=0, start_hour=0, end_hour=0, fail_hour=0):
         spike = 0
         alive = 1
-        if sensor['asset_id'] == failed_asset and start_hour > 0 and hour >= start_hour:
+        if sensor['asset_id'] == failed_asset and (hour >= start_hour or hour <= fail_hour):
             spike = 0.3
-        elif end_hour > 0 and hour <= end_hour and sensor['asset_id'] == failed_asset:
+            print('%d: spike from %d to %d' % (hour, start_hour, fail_hour))
+        elif fail_hour <= hour <= end_hour and sensor['asset_id'] == failed_asset:
             alive = 0
+            print('%d: failure from %d to %d' % (hour, fail_hour, end_hour))
 
         if sensor['sensor_id'] == sensor['depends_on']:
             self._scaling_factors[sensor['sensor_id']] = (random.random() * 0.1 + 0.95 + spike) * alive
