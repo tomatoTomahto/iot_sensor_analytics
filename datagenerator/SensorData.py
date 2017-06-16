@@ -30,6 +30,7 @@ option = sys.argv[2]
 if option in ['static','all']:
     dgen.generateStaticData()
 if option in ['historic','all']:
+    dgen.generateStaticData(load=False)
     dgen.generateHistoricData()
 #if option in ['realtime','all']:
 #    dgen.generate_sensor_data(historic=False)

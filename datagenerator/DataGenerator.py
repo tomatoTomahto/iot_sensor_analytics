@@ -2,6 +2,7 @@ import random, datetime, dateutil.relativedelta, time, json
 from kafka import KafkaProducer
 from AssetBuilder import AssetBuilder
 from KuduConnection import KuduConnection
+from Maintenance import Maintenance
 
 class DataGenerator():
 
@@ -41,21 +42,33 @@ class DataGenerator():
 
     def generateStaticData(self, load = True):
         self._ab.build_wells(self._config['min_lat'],self._config['max_lat'],
-                             self._config['min_long'],self._config['max_long'],self._config['chemicals'])
+                             self._config['min_long'],self._config['max_long'],self._config['chemicals'], load=load)
         self._ab.build_assets(load = load)
+        self._maint = Maintenance(self._config['wells'], self._ab.get_assets(), self._kudu)
 
     def generateHistoricData(self):
-        self._ab.build_assets(load = False)
         days_history = self._config['days_history']
         measurement_interval = self._config['measurement_interval']
         end_date = datetime.datetime.now()
         start_date = (end_date - dateutil.relativedelta.relativedelta(days=days_history)) \
                         .replace(hour=0, minute=0, second=0, microsecond=0)
 
+        day = 0
         for simulation_date in [start_date + datetime.timedelta(days = x) for x in range(0, days_history)]:
             end_of_day = simulation_date.replace(hour=0,minute=0,second=0,microsecond=0) + datetime.timedelta(days=1)
 
+            print(simulation_date)
+
+            day += 1
+            routine_maintenance = day % 10 == 0 # Routine maintenance every 10 days
+            failure = random.random()<0.2 and not routine_maintenance # Failure 20% of the time
+
+            self._maint.do_maintenance(failure, routine_maintenance, time.mktime(simulation_date.timetuple()))
+            failed_asset = self._maint.get_failed_asset()
+            failed_asset_state = self._maint.get_failed_asset_state()
+            start_hour = self._maint.get_start_hour()
+            end_hour = self._maint.get_end_hour()
+
             for simulation_time in [simulation_date + datetime.timedelta(seconds = x)
                      for x in range(0, int((end_of_day-simulation_date).total_seconds()), measurement_interval)]:
-                self._ab.build_readings(time.mktime(simulation_time.timetuple()))
-
+                self._ab.build_readings(time.mktime(simulation_time.timetuple()), failed_asset, start_hour, end_hour)
