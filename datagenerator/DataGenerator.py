@@ -26,7 +26,6 @@ class DataGenerator():
         self._config['max_lat'] = float(config['well information']['max_lat'])
         self._config['min_long'] = float(config['well information']['min_long'])
         self._config['max_long'] = float(config['well information']['max_long'])
-        self._config['chemicals'] = config['well information']['chemicals']
 
         self._config['days_history'] = int(config['sensor device data']['days_history'])
         self._config['measurement_interval'] = int(config['sensor device data']['measurement_interval'])
@@ -42,7 +41,7 @@ class DataGenerator():
 
     def generateStaticData(self, load = True):
         self._ab.build_wells(self._config['min_lat'],self._config['max_lat'],
-                             self._config['min_long'],self._config['max_long'],self._config['chemicals'], load=load)
+                             self._config['min_long'],self._config['max_long'], load=load)
         self._ab.build_assets(load = load)
         self._maint = Maintenance(self._config['wells'], self._ab.get_assets(), self._kudu)
 

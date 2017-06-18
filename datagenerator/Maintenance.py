@@ -33,7 +33,7 @@ class Maintenance():
 
         if self._failed_asset_state == 0:
             if routine_maintenance:
-                print('routine maintenance, everything good')
+                #print('routine maintenance, everything good')
                 maintenance['asset_id'] = random.randint(1, len(self._assets))
                 maintenance['type'] = 'ROUTINE'
                 maintenance['duration'] = random.randint(1, 3)
@@ -46,7 +46,7 @@ class Maintenance():
                 self._failed_asset_state = 1
                 self._failed_asset = random.randint(1,len(self._assets))
                 self._start_hour = random.randint(1,9)
-                print('asset %d failing at %d, needs fixing' % (self._failed_asset, self._start_hour))
+                #print('asset %d failing at %d, needs fixing' % (self._failed_asset, self._start_hour))
             else:
                 self._failed_asset = 0
                 self._failed_asset_state = 0
@@ -55,7 +55,7 @@ class Maintenance():
                 self._end_hour = 0
         elif self._failed_asset_state == 1:
             if routine_maintenance:
-                print('preventative maintenance on asset %d' % self._failed_asset)
+                #print('preventative maintenance on asset %d' % self._failed_asset)
                 maintenance['asset_id'] = self._failed_asset
                 maintenance['type'] = 'PREVENTATIVE'
                 maintenance['duration'] = random.randint(4, 6)
@@ -69,8 +69,8 @@ class Maintenance():
                 self._fail_hour = random.randint(1,9)
                 self._end_hour = random.randint(16,24)
                 self._start_hour = 24
-                print('error on asset %d - shutting down asset at %d until %d' % (self._failed_asset, self._fail_hour, self._end_hour))
-                print('corrective maintenance on asset %d' % self._failed_asset)
+                #print('error on asset %d - shutting down asset at %d until %d' % (self._failed_asset, self._fail_hour, self._end_hour))
+                #print('corrective maintenance on asset %d' % self._failed_asset)
                 maintenance['asset_id'] = self._failed_asset
                 maintenance['type'] = 'CORRECTIVE'
                 maintenance['duration'] = self._end_hour - self._fail_hour

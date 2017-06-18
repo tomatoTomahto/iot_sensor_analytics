@@ -17,12 +17,11 @@ class AssetBuilder():
     def get_assets(self):
         return self._asset_ids
 
-    def build_wells(self, min_lat, max_lat, min_long, max_long, chemicals, load=True):
+    def build_wells(self, min_lat, max_lat, min_long, max_long, load=True):
         for well_id in range(1,self._wells+1):
             well = {'well_id':well_id,
                     'latitude':random.random()*(max_lat-min_lat)+min_lat,
                     'longitude':random.random()*(max_long - min_long)+min_long,
-                    'chemical':chemicals[random.randint(0,len(chemicals)-1)],
                     'depth':random.randint(50,100)}
             if load:
                 self._kudu.insert('impala::sensors.wells', well)
@@ -89,7 +88,7 @@ class AssetBuilder():
 
             self._sensors.append(sensor)
 
-        print(self._sensors)
+        print(len(self._sensors))
 
     def build_readings(self, timestamp, failed_asset=0, start_hour=0, end_hour=0, fail_hour=0):
         self._scaling_factors = {}
@@ -118,10 +117,10 @@ class AssetBuilder():
         alive = 1
         if sensor['asset_id'] == failed_asset and (hour >= start_hour or hour <= fail_hour):
             spike = 0.3
-            print('%d: spike from %d to %d' % (hour, start_hour, fail_hour))
+            #print('%d: spike from %d to %d' % (hour, start_hour, fail_hour))
         elif fail_hour <= hour <= end_hour and sensor['asset_id'] == failed_asset:
             alive = 0
-            print('%d: failure from %d to %d' % (hour, fail_hour, end_hour))
+            #print('%d: failure from %d to %d' % (hour, fail_hour, end_hour))
 
         if sensor['sensor_id'] == sensor['depends_on']:
             self._scaling_factors[sensor['sensor_id']] = (random.random() * 0.1 + 0.95 + spike) * alive
