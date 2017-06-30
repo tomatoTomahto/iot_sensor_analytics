@@ -7,7 +7,7 @@ from Maintenance import Maintenance
 class DataGenerator():
 
     # Initialize generator by reading in all config values
-    def __init__(self, config, file):
+    def __init__(self, config):
         for section in ['sensor device data', 'hadoop']:
             if section not in config:
                 raise Exception('Error: missing [%s] config' % (section))
@@ -45,12 +45,19 @@ class DataGenerator():
         self._ab.build_assets(load = load)
         self._maint = Maintenance(self._config['wells'], self._ab.get_assets(), self._kudu)
 
-    def generateHistoricData(self):
+    def generateSensorData(self, historic=True):
         days_history = self._config['days_history']
         measurement_interval = self._config['measurement_interval']
-        end_date = datetime.datetime.now()
-        start_date = (end_date - dateutil.relativedelta.relativedelta(days=days_history)) \
-                        .replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+        if historic:
+            end_date = datetime.datetime.now()
+            start_date = (end_date - dateutil.relativedelta.relativedelta(days=days_history)) \
+                            .replace(hour=0, minute=0, second=0, microsecond=0)
+        else:
+            start_date = datetime.datetime.now()
+            end_date = (start_date + dateutil.relativedelta.relativedelta(days=days_history)) \
+                            .replace(hour=0, minute=0, second=0, microsecond=0)
 
         day = 0
         for simulation_date in [start_date + datetime.timedelta(days = x) for x in range(0, days_history)]:
@@ -72,3 +79,8 @@ class DataGenerator():
             for simulation_time in [simulation_date + datetime.timedelta(seconds = x)
                      for x in range(0, int((end_of_day-simulation_date).total_seconds()), measurement_interval)]:
                 self._ab.build_readings(time.mktime(simulation_time.timetuple()), failed_asset, start_hour, end_hour, fail_hour)
+
+                if not historic:
+                    print(simulation_time)
+                    time.sleep(measurement_interval)
+

@@ -105,7 +105,7 @@ class AssetBuilder():
             if random.random()<0.5:
                 continue
 
-            self._kudu.insert('impala::sensors.measurements',
+            self._kudu.upsert('impala::sensors.measurements',
                               {'time': timestamp,
                                'sensor_id': sensor_id,
                                'value': min_value * self._scaling_factors[sensor_id]})

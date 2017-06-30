@@ -7,12 +7,10 @@ def print_usage():
     print('<option> : static     : Generate well information data')
     print('         : historic   : Generate historic sensor data')
     print('         : realtime   : Generate real-time sensor data')
-    print('         : all        : Generate well info, historic & real-time sensor data')
-    print('<output> : file       : Write data to file')
-    print('         : kudu       : Write data to kudu')
-    print('Example  : python historian.py config.ini all')
+    print('         : all        : Generate all data')
+    print('Example  : python historian.py config.ini historic')
 
-if len(sys.argv) < 4 or sys.argv[2] not in ['static','historic','realtime','all'] or sys.argv[3] not in ['file','kudu']:
+if len(sys.argv) < 3 or sys.argv[2] not in ['static','historic','realtime','all']:
     print_usage()
     exit()
 
@@ -23,14 +21,13 @@ if not os.path.isfile(config_file):
 config = ConfigParser()
 config.read(config_file)
 
-file = sys.argv[3] == 'file'
-dgen = DataGenerator(config, file)
+dgen = DataGenerator(config)
 
 option = sys.argv[2]
 if option in ['static','all']:
     dgen.generateStaticData()
 if option in ['historic','all']:
     dgen.generateStaticData(load=False)
-    dgen.generateHistoricData()
-#if option in ['realtime','all']:
-#    dgen.generate_sensor_data(historic=False)
+    dgen.generateSensorData()
+if option in ['realtime','all']:
+    dgen.generateSensorData(historic=False)
