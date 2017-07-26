@@ -1,8 +1,9 @@
 import random, datetime, dateutil.relativedelta, time, json
-from kafka import KafkaProducer
+from KafkaConnection import KafkaConnection
 from AssetBuilder import AssetBuilder
 from KuduConnection import KuduConnection
 from Maintenance import Maintenance
+from pyspark.sql import SparkSession
 
 class DataGenerator():
 
@@ -34,10 +35,17 @@ class DataGenerator():
         self._maintenance_costs = []
         self._maintenance_logs = []
 
-        self._kudu = KuduConnection(self._config['kudu_master'], self._config['kudu_port'])
-        #self._kafka_producer = KafkaProducer(bootstrap_servers=self._config['kafka_brokers'], api_version=(0, 10))
+        spark = SparkSession.builder.appName("Sensor Analytics").getOrCreate()
+        
+        self._kudu = KuduConnection(self._config['kudu_master'], self._config['kudu_port'], spark)
+        self._kafka = KafkaConnection(self._config['kafka_brokers'], self._config['kafka_topic'])
 
-        self._ab = AssetBuilder(self._config['wells'], self._kudu)
+        #self._kafka
+        #self._kudu
+        #self._kafka
+        
+        self._ab = AssetBuilder(self._config['wells'], self._kudu, self._kafka)
+        
 
     def generateStaticData(self, load = True):
         self._ab.build_wells(self._config['min_lat'],self._config['max_lat'],
@@ -45,7 +53,7 @@ class DataGenerator():
         self._ab.build_assets(load = load)
         self._maint = Maintenance(self._config['wells'], self._ab.get_assets(), self._kudu)
 
-    def generateSensorData(self, historic=True):
+    def generateSensorData(self, historic=True, kafka=False):
         days_history = self._config['days_history']
         measurement_interval = self._config['measurement_interval']
 
@@ -78,9 +86,9 @@ class DataGenerator():
 
             for simulation_time in [simulation_date + datetime.timedelta(seconds = x)
                      for x in range(0, int((end_of_day-simulation_date).total_seconds()), measurement_interval)]:
-                self._ab.build_readings(time.mktime(simulation_time.timetuple()), failed_asset, start_hour, end_hour, fail_hour)
+                self._ab.build_readings(time.mktime(simulation_time.timetuple()), 
+                                        failed_asset, start_hour, end_hour, fail_hour, kafka)
 
                 if not historic:
                     print(simulation_time)
                     time.sleep(measurement_interval)
-

@@ -1,4 +1,5 @@
 from KuduConnection import KuduConnection
+from pyspark.sql.types import *
 import random
 
 class Maintenance():
@@ -12,6 +13,12 @@ class Maintenance():
         self._start_hour = 24 # time when asset starts to spike
         self._fail_hour = 0 # time when asset shutdown
         self._end_hour = 0 # time when asset is back up
+        
+        self._maint_schema = StructType([StructField("asset_id", IntegerType(), True),
+                                         StructField("type", StringType(), True),
+                                         StructField("duration", IntegerType(), True),
+                                         StructField("cost", FloatType(), True),
+                                         StructField("maint_date", LongType(), True)])
 
     def get_failed_asset(self):
         return self._failed_asset
@@ -77,6 +84,6 @@ class Maintenance():
                 routine_maintenance = True
 
         if routine_maintenance:
-            maintenance['cost'] = maintenance['duration'] * random.randint(950,1050)
-            maintenance['maint_date'] = date
-            self._kudu.insert('impala::sensors.maintenance', maintenance)
+            maintenance['cost'] = float(maintenance['duration'] * random.randint(950,1050))
+            maintenance['maint_date'] = long(date)
+            self._kudu.batch_insert('impala::sensors.maintenance', [maintenance], self._maint_schema)

@@ -1,15 +1,36 @@
 import csv, random, datetime, time
 from KuduConnection import KuduConnection
+from KafkaConnection import KafkaConnection
+from pyspark.sql.types import *
 
 class AssetBuilder():
 
     # Initialize generator by reading in all config values
-    def __init__(self, wells, kudu):
+    def __init__(self, wells, kudu, kafka):
         self._wells = wells
         self._kudu = kudu
+        self._kafka = kafka
         self._sensor_info = {}
         self._sensors = []
         self._asset_ids = {}
+        
+        self._wells_schema = StructType([StructField("well_id", IntegerType(), True),
+                                         StructField("latitude", FloatType(), True),
+                                         StructField("longitude", FloatType(), True),
+                                         StructField("depth", IntegerType(), True)])
+        self._asset_groups_schema = StructType([StructField("group_id", IntegerType(), True),
+                                                StructField("group_name", StringType(), True)])
+        self._assets_schema = StructType([StructField("well_id", IntegerType(), True),
+                                          StructField("asset_id", IntegerType(), True),
+                                          StructField("asset_group_id", IntegerType(), True),
+                                          StructField("asset_name", StringType(), True)])
+        self._sensors_schema = StructType([StructField("sensor_id", IntegerType(), True),
+                                           StructField("asset_id", IntegerType(), True),
+                                           StructField("sensor_name", StringType(), True),
+                                           StructField("units", StringType(), True)])
+        self._readings_schema = StructType([StructField("time", LongType(), True),
+                                            StructField("sensor_id", IntegerType(), True),
+                                            StructField("value", FloatType(), True)])
 
     def get_asset_count(self):
         return len(self._asset_ids)
@@ -18,39 +39,44 @@ class AssetBuilder():
         return self._asset_ids
 
     def build_wells(self, min_lat, max_lat, min_long, max_long, load=True):
+        wells = []
         for well_id in range(1,self._wells+1):
-            well = {'well_id':well_id,
-                    'latitude':random.random()*(max_lat-min_lat)+min_lat,
-                    'longitude':random.random()*(max_long - min_long)+min_long,
-                    'depth':random.randint(50,100)}
-            if load:
-                self._kudu.insert('impala::sensors.wells', well)
-        self._kudu.flush()
+            well = {'well_id': well_id,
+                    'latitude': random.random()*(max_lat-min_lat)+min_lat,
+                    'longitude': random.random()*(max_long - min_long)+min_long,
+                    'depth': random.randint(50,100)}
+            wells.append(well)
+        
+        if load:
+            self._kudu.batch_insert('impala::sensors.wells', wells, self._wells_schema)
 
     def build_assets(self, load=True):
-        with open('asset_groups.csv', 'r') as csvfile:
+        asset_groups = []
+        assets = []
+        with open('datagenerator/asset_groups.csv', 'r') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for row in reader:
-                if load:
-                    self._kudu.insert('impala::sensors.asset_groups', {'group_id':int(row[0]), 'group_name':str(row[1])})
-        self._kudu.flush()
+              asset_groups.append({'group_id':int(row[0]), 'group_name':str(row[1])})
+        
+        if load:
+            self._kudu.batch_insert('impala::sensors.asset_groups', asset_groups, self._asset_groups_schema)
 
-        with open('assets.csv', 'r') as csvfile:
+        with open('datagenerator/assets.csv', 'r') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             asset_id = 1
             for row in reader:
                 for well_id in range(1,self._wells+1):
-                    if load:
-                        self._kudu.insert('impala::sensors.well_assets',
-                                          {'asset_id': asset_id,
-                                           'well_id': well_id,
-                                           'asset_group_id': int(row[1]),
-                                           'asset_name': str(row[2])})
+                    assets.append({'asset_id': asset_id,
+                                   'well_id': well_id,
+                                   'asset_group_id': int(row[1]),
+                                   'asset_name': str(row[2])})
+
                     self._asset_ids[asset_id] = {'asset_id':int(row[0]), 'well_id':well_id, 'asset_name':str(row[2])}
                     asset_id += 1
-        self._kudu.flush()
+        if load: 
+            self._kudu.batch_insert('impala::sensors.well_assets', assets, self._assets_schema)
 
-        with open('sensors.csv', 'r') as csvfile:
+        with open('datagenerator/sensors.csv', 'r') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for row in reader:
                 self._sensor_info[str(row[1])] = {'asset_id' : int(row[0]),
@@ -67,8 +93,6 @@ class AssetBuilder():
                               'asset_id': asset_id,
                               'sensor_name': sensor_name,
                               'units': self._sensor_info[sensor_name]['units']}
-                    if load:
-                        self._kudu.insert('impala::sensors.asset_sensors', sensor)
 
                     sensor['well_id'] = self._asset_ids[asset_id]['well_id']
                     sensor['asset_id'] = asset_id
@@ -76,8 +100,9 @@ class AssetBuilder():
                     sensor['depends_on'] = sensor_id
                     sensors.append(sensor)
                     sensor_id += 1
-
-        self._kudu.flush()
+        
+        if load:
+          self._kudu.batch_insert('impala::sensors.asset_sensors', sensors, self._sensors_schema)
 
         for sensor in sensors:
             for dep_sensor in sensors:
@@ -90,9 +115,10 @@ class AssetBuilder():
 
         print(len(self._sensors))
 
-    def build_readings(self, timestamp, failed_asset=0, start_hour=0, end_hour=0, fail_hour=0):
+    def build_readings(self, timestamp, failed_asset=0, start_hour=0, end_hour=0, fail_hour=0, kafka=False):
         self._scaling_factors = {}
 
+        readings = []
         for sensor in self._sensors:
             sensor_id = sensor['sensor_id']
             depends_on = sensor['depends_on']
@@ -104,13 +130,18 @@ class AssetBuilder():
 
             if random.random()<0.5:
                 continue
+                
+            reading = {'time': long(timestamp),
+                       'sensor_id': sensor_id,
+                       'value': min_value * self._scaling_factors[sensor_id]}
+            
+            if kafka:
+                self._kafka.send(reading)
+            else:
+                readings.append(reading)
 
-            self._kudu.upsert('impala::sensors.measurements',
-                              {'time': timestamp,
-                               'sensor_id': sensor_id,
-                               'value': min_value * self._scaling_factors[sensor_id]})
-
-        self._kudu.flush()
+        if not kafka:
+            self._kudu.batch_insert('impala::sensors.measurements', readings, self._readings_schema)
 
     def _build_dependent_readings(self, sensor, hour, failed_asset=0, start_hour=0, end_hour=0, fail_hour=0):
         spike = 0
