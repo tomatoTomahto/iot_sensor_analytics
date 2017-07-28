@@ -12,10 +12,16 @@ config = ConfigParser()
 config.read(config_file)
 
 # # Create a data generator
+# * Connect to kafka, kudu, and spark
+# * Load metadata (well info, asset info, and sensor info)
 dgen = DataGenerator(config)
 
-# # Generate static metadata about wells, assets, and sensors
-dgen.generateStaticData(load=False)
+# # Generate static metadata about wells, assets, and sensors (COMMENT out for real-time data)
+dgen.generateStaticData(load=True)
 
-# # Generate historic sensor readings and write to Kudu
+# # Generate historic sensor readings and write to Kudu (COMMENT out for real-time data)
 dgen.generateSensorData(historic=True)
+
+# # Generate real-time sensor readings and write to kafka (UNCOMMENT for real-time data)
+#dgen.generateStaticData(load=False)
+#dgen.generateSensorData(historic=False, kafka=True)

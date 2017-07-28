@@ -128,8 +128,9 @@ class AssetBuilder():
                                                datetime.datetime.fromtimestamp(timestamp).hour,
                                                failed_asset, start_hour, end_hour, fail_hour)
 
-            if random.random()<0.5:
-                continue
+            # Only 20% of the sensors will generate data at any given time
+            #if random.random()<0.2:
+            #    continue
                 
             reading = {'time': long(timestamp),
                        'sensor_id': sensor_id,

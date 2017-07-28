@@ -1,4 +1,5 @@
 from kafka import KafkaProducer
+import json
 
 class KafkaConnection():
   def __init__(self, brokers, topic):
@@ -7,4 +8,4 @@ class KafkaConnection():
     
   # Send payload (map) to kafka topic
   def send(self, payload):
-    self._kafka_producer.send(topic, value=json.dumps(predicted_measurement))
+    self._kafka_producer.send(self._topic, value=json.dumps(payload))
