@@ -63,7 +63,7 @@ create table maintenance (
     asset_id int,
     cost float,
     duration int,
-    notes string,
+    type string,
     primary key (maint_date, asset_id)
 ) 
 partition by hash partitions 16

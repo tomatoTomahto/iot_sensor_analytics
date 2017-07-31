@@ -1,3 +1,5 @@
+!pip install kafka
+
 # # Import Packages
 import os, sys
 sys.path.append('datagenerator')

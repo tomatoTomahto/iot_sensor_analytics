@@ -99,7 +99,7 @@ import ConfigParser
 
 # ### Read in Kudu information
 config = ConfigParser.ConfigParser()
-config.read('datagenerator/config.ini')
+config.read('config.ini')
 kuduMaster = config.get('hadoop','kudu_masters')
 kuduPort = config.get('hadoop','kudu_port')
 
